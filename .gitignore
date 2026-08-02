@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+.env
+.env.local
+*.log
+.DS_Store
+next-env.d.ts
+
+# 런타임에 업로드된 업무일지 데이터 (커밋 안 함)
+data/logs.json

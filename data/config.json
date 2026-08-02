@@ -1,0 +1,102 @@
+{
+  "businessName": "STAY IN BAR",
+  "fixedCost": 3500000,
+  "dailyTarget": 1500000,
+  "incentivePool3Rate": 0.03,
+  "incentivePool2Rate": 0.02,
+  "vatRate": 0.1,
+  "defaultHoursPerDay": 9,
+  "defaultServerWage": 12000,
+  "sheetCsvUrl": "",
+  "ownerPin": "1234",
+  "variableCosts": {},
+  "employees": [
+    {
+      "id": "kim-junsik",
+      "name": "김준식",
+      "aliases": [
+        "김준식",
+        "준식",
+        "Joon",
+        "Joon Manager",
+        "메인바텐더",
+        "점장"
+      ],
+      "role": "manager",
+      "position": "메인바텐더 / 점장",
+      "employmentType": "salary",
+      "annualSalary": 31200000,
+      "hourlyWage": 0,
+      "taxMode": "4insurance",
+      "hoursPerDay": 9,
+      "getsPool3": true,
+      "phone": "",
+      "rrn": "",
+      "bankAccount": "",
+      "pin": "1111"
+    },
+    {
+      "id": "yang-hyunyoung",
+      "name": "양현영",
+      "aliases": [
+        "양현영",
+        "현영"
+      ],
+      "role": "staff",
+      "position": "바텐더",
+      "employmentType": "salary",
+      "annualSalary": 30000000,
+      "hourlyWage": 0,
+      "taxMode": "4insurance",
+      "hoursPerDay": 9,
+      "getsPool3": false,
+      "phone": "",
+      "rrn": "",
+      "bankAccount": "",
+      "pin": "2222"
+    },
+    {
+      "id": "kim-mingun",
+      "name": "김민건",
+      "aliases": [
+        "김민건",
+        "민건"
+      ],
+      "role": "staff",
+      "position": "바텐더",
+      "employmentType": "salary",
+      "annualSalary": 15000000,
+      "hourlyWage": 0,
+      "taxMode": "4insurance",
+      "hoursPerDay": 9,
+      "getsPool3": false,
+      "phone": "",
+      "rrn": "",
+      "bankAccount": "",
+      "pin": "3333"
+    },
+    {
+      "id": "owner-doa",
+      "name": "Doa (사장)",
+      "aliases": [
+        "Doa",
+        "Owener",
+        "Doa Owener",
+        "사장",
+        "owner"
+      ],
+      "role": "owner",
+      "position": "사장",
+      "employmentType": "salary",
+      "annualSalary": 0,
+      "hourlyWage": 0,
+      "taxMode": "3.3",
+      "hoursPerDay": 9,
+      "getsPool3": false,
+      "phone": "",
+      "rrn": "",
+      "bankAccount": "",
+      "pin": "1234"
+    }
+  ]
+}

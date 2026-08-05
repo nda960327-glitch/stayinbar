@@ -63,14 +63,17 @@ export default function MyPage() {
             }}
             style={{ width: "auto" }}
           >
-            {data.availableMonths.length === 0 && <option value={month}>{month || "데이터 없음"}</option>}
-            {data.availableMonths.map((m) => (
+            {(data.availableMonths || []).length === 0 && <option value={month}>{month || "데이터 없음"}</option>}
+            {(data.availableMonths || []).map((m) => (
               <option key={m} value={m}>
                 {m}
               </option>
             ))}
           </select>
         </div>
+        <a href="/exec" className="btn ghost sm">
+          📊 임원 대시보드 입장
+        </a>
       </div>
 
       {/* 매장 매출 (직원도 열람) */}

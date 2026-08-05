@@ -24,6 +24,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
   const body = (await req.json()) as AppConfig;
-  await saveConfig(body);
-  return NextResponse.json({ ok: true });
+  try {
+    await saveConfig(body);
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }

@@ -14,6 +14,7 @@ export async function saveConfig(config: AppConfig): Promise<void> {
     await fs.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
   } catch (e) {
     console.error("Failed to save config to disk (read-only filesystem?):", e);
+    throw new Error("설정 저장에 실패했습니다. (파일 시스템 읽기 전용 여부 확인)");
   }
 }
 

@@ -21,13 +21,17 @@ export default function EmployeeDetail({
   month: string;
   isOwner: boolean;
 }) {
-  const [viewTaxMode, setViewTaxMode] = useState<"3.3" | "4insurance">(emp.takeHome.mode);
+  const [viewTaxMode, setViewTaxMode] = useState<"3.3" | "4insurance">(emp.takeHome?.mode ?? "3.3");
   const [ai, setAi] = useState<AiReport | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiErr, setAiErr] = useState("");
   const [showRrn, setShowRrn] = useState(false);
   const [editingInfo, setEditingInfo] = useState(false);
-  const [infoForm, setInfoForm] = useState({ phone: emp.personal.phone, rrn: emp.personal.rrn, bankAccount: emp.personal.bankAccount });
+  const [infoForm, setInfoForm] = useState({
+    phone: emp.personal?.phone ?? "",
+    rrn: emp.personal?.rrn ?? "",
+    bankAccount: emp.personal?.bankAccount ?? "",
+  });
   const [savingInfo, setSavingInfo] = useState(false);
 
   async function saveInfo() {
@@ -73,8 +77,9 @@ export default function EmployeeDetail({
     }
   }
 
-  const p = emp.personal;
-  const viewTakeHome = viewTaxMode === "3.3" ? (emp.takeHome33 || emp.takeHome) : (emp.takeHome4Ins || emp.takeHome);
+  const p = emp.personal ?? { phone: "", rrn: "", bankAccount: "" };
+  const viewTakeHome = (viewTaxMode === "3.3" ? (emp.takeHome33 || emp.takeHome) : (emp.takeHome4Ins || emp.takeHome)) ?? { gross: 0, deductions: [], totalDeduction: 0, net: 0, mode: "3.3" };
+
 
   return (
     <div className="card mt">

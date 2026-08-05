@@ -23,10 +23,10 @@ function Blank({ v }: { v?: string | number | null }) {
 export default function ContractViewer({ emp, businessName, isOwner }: Props) {
   const c = emp.contract ?? {};
   const monthlySalary = emp.employmentType === "salary" ? Math.round(emp.annualSalary / 12) : null;
-  const maskedRrn = emp.personal.rrn
+  const maskedRrn = emp.personal?.rrn
     ? emp.personal.rrn.replace(/^(\d{6})-?(\d)(\d{5,6})$/, "$1-$2******")
     : null;
-  const taxModeLabel = emp.takeHome.mode === "3.3" ? "3.3% 원천징수" : "4대보험 가입";
+  const taxModeLabel = emp.takeHome?.mode === "3.3" ? "3.3% 원천징수" : "4대보험 가입";
 
   function handlePrint() {
     const el = document.getElementById("contract-print-area");

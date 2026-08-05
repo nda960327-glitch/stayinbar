@@ -97,7 +97,8 @@ export default function ExecPage() {
   }
   if (!data) return null;
 
-  const o = data.owner;
+  const o = data.owner ?? ({} as any);
+  const availableMonths = data.availableMonths ?? [];
 
   return (
     <>
@@ -119,10 +120,11 @@ export default function ExecPage() {
             onChange={(e) => { setMonth(e.target.value); loadData(e.target.value); }}
             style={{ width: "auto" }}
           >
-            {data.availableMonths.map((m) => (
+            {availableMonths.map((m) => (
               <option key={m} value={m}>{m}</option>
             ))}
           </select>
+
           <button
             className="btn ghost sm"
             onClick={() => { sessionStorage.removeItem("exec_authed"); setAuthed(false); }}

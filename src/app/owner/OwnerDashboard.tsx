@@ -42,7 +42,7 @@ export default function OwnerDashboard() {
       }
       setData(json);
       setMonth(json.month);
-      setMarketing(json.owner.marketingCost);
+      setMarketing(json.owner?.marketingCost ?? 0);
     } catch {
       setError("네트워크 오류");
     } finally {
@@ -107,7 +107,8 @@ export default function OwnerDashboard() {
   }
   if (!data) return null;
 
-  const o = data.owner;
+  const o = data.owner ?? ({} as any);
+  const availableMonths = data.availableMonths ?? [];
   const hasData = data.workingDays > 0;
 
   return (
@@ -124,14 +125,15 @@ export default function OwnerDashboard() {
             }}
             style={{ width: "auto" }}
           >
-            {data.availableMonths.length === 0 && <option value={month}>{month || "데이터 없음"}</option>}
-            {data.availableMonths.map((m) => (
+            {availableMonths.length === 0 && <option value={month}>{month || "데이터 없음"}</option>}
+            {availableMonths.map((m) => (
               <option key={m} value={m}>
                 {m}
               </option>
             ))}
           </select>
         </div>
+
         <span className="muted small">
           소스: {sourceLabel(data.source)}
           {data.updatedAt ? ` · ${new Date(data.updatedAt).toLocaleString("ko-KR")}` : ""}

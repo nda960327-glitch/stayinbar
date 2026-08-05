@@ -15,6 +15,24 @@
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f8f6f0;
+    --bg-2: #ffffff;
+    --card: #ffffff;
+    --card-2: #f1efe8;
+    --border: #e3ded5;
+    --text: #2c2820;
+    --muted: #8c8374;
+    --accent: #d4a94a;
+    --accent-2: #b58d35;
+    --green: #4ebf6b;
+    --red: #df584f;
+    --blue: #5198d6;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -188,7 +206,7 @@ thead th {
   border-bottom: 1px solid var(--border);
 }
 tbody tr:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(128, 128, 128, 0.1);
 }
 tr.total td {
   font-weight: 800;

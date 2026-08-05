@@ -244,8 +244,13 @@ export default function OwnerDashboard() {
 
           {/* 직원 요약 테이블 */}
           <div className="card mt">
-            <h2>직원별 급여 · 인센티브</h2>
-            <div style={{ overflowX: "auto" }}>
+            <div className="row spread">
+              <h2 style={{ margin: 0 }}>직원별 급여 · 인센티브</h2>
+              <a href="/settings" className="btn ghost sm">
+                ⚙️ 직원 추가 / 이름 수정
+              </a>
+            </div>
+            <div style={{ overflowX: "auto", marginTop: 16 }}>
               <table>
                 <thead>
                   <tr>

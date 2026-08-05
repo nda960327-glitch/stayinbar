@@ -99,12 +99,22 @@ export function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
     const revenue = revenueCol ? parseRevenue(r[revenueCol]) : 0;
     let workedHours: number | undefined;
     if (hoursCol && r[hoursCol] !== undefined) {
-      const val = String(r[hoursCol]).trim();
+      let val = String(r[hoursCol]).trim();
+      let isPM = false;
+      if (val.includes("오후") || val.toUpperCase().includes("PM")) {
+        isPM = true;
+      }
+      val = val.replace(/[오전오후AMPM]/gi, "").trim();
+
       if (val.includes(":")) {
         const parts = val.split(":");
-        const h = Number(parts[0]) || 0;
+        let h = Number(parts[0]) || 0;
         const m = Number(parts[1]) || 0;
         const s = Number(parts[2]) || 0;
+        
+        if (isPM && h < 12) h += 12;
+        if (!isPM && h === 12) h = 0;
+
         const total = h + (m / 60) + (s / 3600);
         if (total > 0) workedHours = Math.round(total * 10) / 10;
       } else if (val) {

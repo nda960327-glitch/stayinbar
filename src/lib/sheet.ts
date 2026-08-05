@@ -148,7 +148,7 @@ export async function fetchSheetCsv(url: string): Promise<ParseResult> {
     if (docIdMatch) {
       const docId = docIdMatch[1];
       const gid = gidMatch ? gidMatch[1] : "0";
-      fetchUrl = \`https://docs.google.com/spreadsheets/d/\${docId}/export?format=csv&gid=\${gid}\`;
+      fetchUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
     }
   }
 

@@ -14,9 +14,10 @@ export default function ExecPage() {
   const [data, setData] = useState<ExecData | null>(null);
   const [month, setMonth] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState("");
   const [showMaterial, setShowMaterial] = useState(false);
 
-  // session persistence
+  // session persistence check
   useEffect(() => {
     if (sessionStorage.getItem("exec_authed") === "1") {
       setAuthed(true);
@@ -25,12 +26,21 @@ export default function ExecPage() {
 
   const loadData = useCallback(async (m?: string) => {
     setLoading(true);
+    setFetchError("");
     try {
       const url = m ? `/api/data?month=${m}` : "/api/data";
       const res = await fetch(url);
       const json = await res.json();
+      if (!res.ok) {
+        setFetchError(json.error ?? "데이터를 불러올 수 없습니다.");
+        setData(null);
+        return;
+      }
       setData(json);
-      setMonth(json.month);
+      setMonth(json.month ?? "");
+    } catch {
+      setFetchError("네트워크 오류가 발생했습니다.");
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -53,11 +63,21 @@ export default function ExecPage() {
         sessionStorage.setItem("exec_authed", "1");
         setAuthed(true);
       } else {
-        setAuthError("PIN이 올바르지 않습니다.");
+        const json = await res.json().catch(() => ({}));
+        setAuthError(json.error ?? "PIN이 올바르지 않습니다.");
       }
+    } catch {
+      setAuthError("네트워크 오류");
     } finally {
       setAuthLoading(false);
     }
+  }
+
+  async function handleLogout() {
+    sessionStorage.removeItem("exec_authed");
+    await fetch("/api/logout", { method: "POST" }).catch(() => {});
+    setAuthed(false);
+    setData(null);
   }
 
   /* ── Login Screen ── */
@@ -95,10 +115,22 @@ export default function ExecPage() {
   if (loading && !data) {
     return <div className="card" style={{ textAlign: "center", padding: 40 }}>📊 데이터 불러오는 중…</div>;
   }
+
+  if (fetchError) {
+    return (
+      <div className="card" style={{ textAlign: "center", padding: 40 }}>
+        <div className="notice warn">{fetchError}</div>
+        <button className="btn mt" onClick={() => loadData()}>다시 시도</button>
+      </div>
+    );
+  }
+
   if (!data) return null;
 
   const o = data.owner ?? ({} as any);
   const availableMonths = data.availableMonths ?? [];
+  const employees = data.employees ?? [];
+  const materialCostDetails = data.materialCostDetails ?? [];
 
   return (
     <>
@@ -106,7 +138,7 @@ export default function ExecPage() {
       <div className="row spread" style={{ marginBottom: 20 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: "1.4rem" }}>
-            {data.businessName}
+            {data.businessName || "STAY IN BAR"}
             <span className="sub" style={{ marginLeft: 8 }}>임원 대시보드</span>
           </h1>
           <p className="muted small">
@@ -120,15 +152,12 @@ export default function ExecPage() {
             onChange={(e) => { setMonth(e.target.value); loadData(e.target.value); }}
             style={{ width: "auto" }}
           >
+            {availableMonths.length === 0 && <option value={month}>{month || "데이터 없음"}</option>}
             {availableMonths.map((m) => (
               <option key={m} value={m}>{m}</option>
             ))}
           </select>
-
-          <button
-            className="btn ghost sm"
-            onClick={() => { sessionStorage.removeItem("exec_authed"); setAuthed(false); }}
-          >
+          <button className="btn ghost sm" onClick={handleLogout}>
             로그아웃
           </button>
         </div>
@@ -138,29 +167,29 @@ export default function ExecPage() {
       <div className="grid cols-4">
         <div className="stat">
           <div className="label">월 총매출</div>
-          <div className="value accent">{wonShort(o.totalSales)}원</div>
-          <div className="foot">{won(o.totalSales)}</div>
+          <div className="value accent">{wonShort(o.totalSales ?? 0)}원</div>
+          <div className="foot">{won(o.totalSales ?? 0)}</div>
         </div>
         <div className="stat">
           <div className="label">목표 달성률</div>
-          <div className={`value ${o.targetAchievement >= 100 ? "green" : ""}`}>
-            {pct(o.targetAchievement)}
+          <div className={`value ${(o.targetAchievement ?? 0) >= 100 ? "green" : ""}`}>
+            {pct(o.targetAchievement ?? 0)}
           </div>
-          <div className="foot">목표 {wonShort(o.targetSales)}원</div>
+          <div className="foot">목표 {wonShort(o.targetSales ?? 0)}원</div>
         </div>
         <div className="stat">
           <div className="label">영업일수</div>
-          <div className="value">{o.workingDays}일</div>
+          <div className="value">{o.workingDays ?? 0}일</div>
           <div className="foot">
-            1일 목표 {wonShort(o.workingDays > 0 ? Math.round(o.targetSales / o.workingDays) : 0)}원
+            1일 목표 {wonShort((o.workingDays ?? 0) > 0 ? Math.round((o.targetSales ?? 0) / o.workingDays) : 0)}원
           </div>
         </div>
         <div className="stat">
           <div className="label">최종 순수익</div>
-          <div className={`value ${o.netProfit >= 0 ? "green" : "red"}`}>
-            {wonShort(o.netProfit)}원
+          <div className={`value ${(o.netProfit ?? 0) >= 0 ? "green" : "red"}`}>
+            {wonShort(o.netProfit ?? 0)}원
           </div>
-          <div className="foot">{won(o.netProfit)}</div>
+          <div className="foot">{won(o.netProfit ?? 0)}</div>
         </div>
       </div>
 
@@ -169,14 +198,14 @@ export default function ExecPage() {
         <h2>손익 계산 <span className="sub">{month}</span></h2>
 
         {[
-          { label: "월 총매출", value: o.totalSales, plus: true },
-          { label: "총 급여 (세전)", value: o.totalPayroll },
-          { label: "총 인센티브", value: o.totalIncentive },
-          { label: "고정비 (월세 등)", value: o.fixedCost },
-          { label: "부가세 (10%)", value: o.vat },
-          { label: "카드수수료 (2%)", value: o.cardFee },
-          { label: "재료비 + 주류비", value: data.materialCost },
-          { label: "마케팅 및 기타", value: o.marketingCost },
+          { label: "월 총매출", value: o.totalSales ?? 0, plus: true },
+          { label: "총 급여 (세전)", value: o.totalPayroll ?? 0 },
+          { label: "총 인센티브", value: o.totalIncentive ?? 0 },
+          { label: "고정비 (월세 등)", value: o.fixedCost ?? 0 },
+          { label: "부가세 (10%)", value: o.vat ?? 0 },
+          { label: "카드수수료 (2%)", value: o.cardFee ?? 0 },
+          { label: "재료비 + 주류비", value: data.materialCost ?? 0 },
+          { label: "마케팅 및 기타", value: o.marketingCost ?? 0 },
         ].map(({ label, value, plus }) => (
           <div className="pnl-line" key={label}>
             <span className="name">{label}</span>
@@ -187,7 +216,7 @@ export default function ExecPage() {
         ))}
 
         {/* 재료비 상세 */}
-        {data.materialCostDetails && data.materialCostDetails.length > 0 && (
+        {materialCostDetails.length > 0 && (
           <div style={{ marginTop: 8, marginBottom: 8 }}>
             <button
               className="btn ghost sm"
@@ -205,7 +234,7 @@ export default function ExecPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.materialCostDetails.map(({ date, amount }) => (
+                    {materialCostDetails.map(({ date, amount }) => (
                       <tr key={date}>
                         <td>{date}</td>
                         <td style={{ textAlign: "right" }}>{won(amount)}</td>
@@ -214,7 +243,7 @@ export default function ExecPage() {
                     <tr className="total">
                       <td>합계</td>
                       <td style={{ textAlign: "right" }}>
-                        {won(data.materialCostDetails.reduce((s, r) => s + r.amount, 0))}
+                        {won(materialCostDetails.reduce((s, r) => s + r.amount, 0))}
                       </td>
                     </tr>
                   </tbody>
@@ -226,7 +255,7 @@ export default function ExecPage() {
 
         <div className="pnl-line result mt">
           <span className="name">최종 순수익</span>
-          <span className={`amt ${o.netProfit < 0 ? "red" : ""}`}>{won(o.netProfit)}</span>
+          <span className={`amt ${(o.netProfit ?? 0) < 0 ? "red" : ""}`}>{won(o.netProfit ?? 0)}</span>
         </div>
         <p className="muted small mt-s">
           순수익 = 매출 − 급여 − 인센티브 − 고정비 − 부가세 − 카드수수료 − 재료비/주류비 − 마케팅및기타
@@ -250,7 +279,7 @@ export default function ExecPage() {
               </tr>
             </thead>
             <tbody>
-              {data.employees.map((e) => (
+              {employees.map((e) => (
                 <tr key={e.id}>
                   <td>
                     {e.name}
@@ -269,9 +298,9 @@ export default function ExecPage() {
                 <td></td>
                 <td></td>
                 <td></td>
-                <td>{won(o.totalPayroll)}</td>
-                <td>{won(o.totalIncentive)}</td>
-                <td>{won(o.totalPayroll + o.totalIncentive)}</td>
+                <td>{won(o.totalPayroll ?? 0)}</td>
+                <td>{won(o.totalIncentive ?? 0)}</td>
+                <td>{won((o.totalPayroll ?? 0) + (o.totalIncentive ?? 0))}</td>
               </tr>
             </tbody>
           </table>

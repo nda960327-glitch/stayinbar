@@ -263,6 +263,17 @@ export function computeMonthly(
     netProfit,
   };
 
+  // 날짜별 재료비 집계
+  const costByDate = new Map<string, number>();
+  for (const r of monthRows) {
+    if (r.materialCost > 0) {
+      costByDate.set(r.date, (costByDate.get(r.date) ?? 0) + r.materialCost);
+    }
+  }
+  const materialCostDetails = Array.from(costByDate.entries())
+    .map(([date, amount]) => ({ date, amount }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
   return {
     month: targetMonth,
     availableMonths,
@@ -274,5 +285,6 @@ export function computeMonthly(
     owner,
     unmatchedNames: Array.from(unmatched),
     materialCost: sheetMaterialCost,
+    materialCostDetails,
   };
 }

@@ -26,6 +26,7 @@ export default function OwnerDashboard() {
   const [uploadMsg, setUploadMsg] = useState("");
 
   const [openEmp, setOpenEmp] = useState<string | null>(null);
+  const [showMaterial, setShowMaterial] = useState(false);
 
   const load = useCallback(async (m?: string) => {
     setLoading(true);
@@ -218,6 +219,42 @@ export default function OwnerDashboard() {
               </span>
               <span className="amt minus">- {won(o.materialCost)}</span>
             </div>
+            {data.materialCostDetails && data.materialCostDetails.length > 0 && (
+              <div style={{ marginBottom: 8 }}>
+                <button
+                  className="btn ghost sm"
+                  onClick={() => setShowMaterial(!showMaterial)}
+                >
+                  {showMaterial ? "▲ 재료비 상세 접기" : "▼ 재료비 상세내역 보기"}
+                </button>
+                {showMaterial && (
+                  <div style={{ overflowX: "auto", marginTop: 8 }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>날짜</th>
+                          <th style={{ textAlign: "right" }}>금액</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.materialCostDetails.map(({ date, amount }) => (
+                          <tr key={date}>
+                            <td>{date}</td>
+                            <td style={{ textAlign: "right" }}>{won(amount)}</td>
+                          </tr>
+                        ))}
+                        <tr className="total">
+                          <td>합계</td>
+                          <td style={{ textAlign: "right" }}>
+                            {won(data.materialCostDetails.reduce((s, r) => s + r.amount, 0))}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* 입력 변동비 */}
             <div className="grid cols-1 mt">

@@ -57,6 +57,7 @@ export interface AppConfig {
   defaultServerWage: number;
   sheetCsvUrl: string;
   ownerPin: string;
+  execPin: string;           // 임원 대시보드 PIN
   variableCosts: Record<string, VariableCost>;
   employees: Employee[];
 }
@@ -138,4 +139,5 @@ export interface MonthlyResult {
   owner: OwnerPnL;
   unmatchedNames: string[]; // 시트에 있으나 직원 등록 안 된 이름
   materialCost: number; // 해당 월의 스프레드시트에서 합산한 재료비+주류비
+  materialCostDetails: { date: string; amount: number }[];
 }

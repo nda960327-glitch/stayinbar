@@ -81,6 +81,11 @@ export default function LoginForm({ users, business }: { users: User[]; business
         <p className="muted small mt">
           초기 PIN은 관리자에게 문의하세요. 사장님은 설정에서 PIN을 변경할 수 있습니다.
         </p>
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+          <a href="/exec" className="btn ghost sm" style={{ width: "100%", textAlign: "center", display: "block" }}>
+            📊 임원 대시보드 입장
+          </a>
+        </div>
       </div>
     </div>
   );

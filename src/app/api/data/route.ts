@@ -16,7 +16,12 @@ export async function GET(req: Request) {
   const month = searchParams.get("month") ?? undefined;
 
   const config = await getConfig();
-  const { rows, source, updatedAt } = await getLogs();
+  const { rows, source, updatedAt, error: fetchError } = await getLogs();
+  
+  if (fetchError && rows.length === 0) {
+    return NextResponse.json({ error: `구글시트에서 데이터를 가져오는 데 실패했습니다: ${fetchError}` }, { status: 500 });
+  }
+
   const result = computeMonthly(rows, config, month);
 
   // 직원은 본인 데이터만

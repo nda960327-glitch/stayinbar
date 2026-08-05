@@ -31,15 +31,18 @@ export async function getLogs(): Promise<{
   rows: LogRow[];
   source: string;
   updatedAt: string;
+  error?: string;
 }> {
   const config = await getConfig();
   if (config.sheetCsvUrl) {
     let fetchedRows: LogRow[] | null = null;
+    let fetchError = "";
     try {
       const result = await fetchSheetCsv(config.sheetCsvUrl);
       fetchedRows = result.rows;
-    } catch (e) {
+    } catch (e: any) {
       console.error("fetchSheetCsv Error:", e);
+      fetchError = e?.message || String(e);
     }
 
     if (fetchedRows) {
@@ -49,6 +52,11 @@ export async function getLogs(): Promise<{
         console.error("saveLogs Error:", e);
       }
       return { rows: fetchedRows, source: "google-sheet", updatedAt: new Date().toISOString() };
+    }
+    
+    // If it failed to fetch, return the error
+    if (fetchError) {
+      return { rows: [], source: "error", updatedAt: "", error: fetchError };
     }
   }
   const stored = await readStoredLogs();

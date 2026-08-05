@@ -34,13 +34,21 @@ export async function getLogs(): Promise<{
 }> {
   const config = await getConfig();
   if (config.sheetCsvUrl) {
+    let fetchedRows: LogRow[] | null = null;
     try {
-      const { rows } = await fetchSheetCsv(config.sheetCsvUrl);
-      await saveLogs(rows, "google-sheet");
-      return { rows, source: "google-sheet", updatedAt: new Date().toISOString() };
+      const result = await fetchSheetCsv(config.sheetCsvUrl);
+      fetchedRows = result.rows;
     } catch (e) {
       console.error("fetchSheetCsv Error:", e);
-      // URL 실패 시 저장본으로 폴백
+    }
+
+    if (fetchedRows) {
+      try {
+        await saveLogs(fetchedRows, "google-sheet");
+      } catch (e) {
+        console.error("saveLogs Error:", e);
+      }
+      return { rows: fetchedRows, source: "google-sheet", updatedAt: new Date().toISOString() };
     }
   }
   const stored = await readStoredLogs();

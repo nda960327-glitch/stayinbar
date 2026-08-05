@@ -15,7 +15,11 @@ export async function getConfig(): Promise<AppConfig> {
 
 export async function saveConfig(config: AppConfig): Promise<void> {
   cache = config;
-  await fs.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
+  try {
+    await fs.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to save config to disk (read-only filesystem?):", e);
+  }
 }
 
 // 민감정보(PIN, 주민번호, 계좌)를 제거한 공개용 설정

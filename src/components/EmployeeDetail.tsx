@@ -20,6 +20,7 @@ export default function EmployeeDetail({
   month: string;
   isOwner: boolean;
 }) {
+  const [viewTaxMode, setViewTaxMode] = useState<"3.3" | "4insurance">(emp.takeHome.mode);
   const [ai, setAi] = useState<AiReport | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiErr, setAiErr] = useState("");
@@ -72,6 +73,7 @@ export default function EmployeeDetail({
   }
 
   const p = emp.personal;
+  const viewTakeHome = viewTaxMode === "3.3" ? (emp.takeHome33 || emp.takeHome) : (emp.takeHome4Ins || emp.takeHome);
 
   return (
     <div className="card mt">
@@ -105,17 +107,22 @@ export default function EmployeeDetail({
 
       {/* 실수령액 */}
       <div className="card mt" style={{ background: "var(--bg-2)" }}>
-        <h2>
-          실수령액 (추정){" "}
-          <span className="sub">
-            {emp.takeHome.mode === "3.3" ? "3.3% 원천징수" : "4대보험 적용"}
-          </span>
-        </h2>
+        <div className="row spread" style={{ marginBottom: 12 }}>
+          <h2 style={{ margin: 0 }}>실수령액 (추정)</h2>
+          <select 
+            value={viewTaxMode} 
+            onChange={(e) => setViewTaxMode(e.target.value as "3.3" | "4insurance")}
+            style={{ width: "auto", padding: "6px 10px" }}
+          >
+            <option value="3.3">3.3% 원천징수</option>
+            <option value="4insurance">4대보험 적용</option>
+          </select>
+        </div>
         <div className="pnl-line">
           <span className="name">세전 합계 (급여 + 인센티브)</span>
           <span className="amt">{won(emp.grossPay)}</span>
         </div>
-        {emp.takeHome.deductions.map((d) => (
+        {viewTakeHome.deductions.map((d) => (
           <div className="pnl-line" key={d.label}>
             <span className="name">{d.label}</span>
             <span className="amt minus">- {won(d.amount)}</span>
@@ -123,7 +130,7 @@ export default function EmployeeDetail({
         ))}
         <div className="pnl-line result">
           <span className="name">실수령액</span>
-          <span className="amt">{won(emp.takeHome.net)}</span>
+          <span className="amt">{won(viewTakeHome.net)}</span>
         </div>
         <p className="muted small mt-s">
           ※ 소득세는 부양가족 등 개인 조건에 따라 달라지므로 추정치입니다.

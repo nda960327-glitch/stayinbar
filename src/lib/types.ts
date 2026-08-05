@@ -76,6 +76,8 @@ export interface EmployeeReport {
   incentive: number;
   grossPay: number; // 급여 + 인센티브 (세전)
   takeHome: TakeHome;
+  takeHome33: TakeHome;
+  takeHome4Ins: TakeHome;
   personal: {
     phone: string;
     rrn: string;

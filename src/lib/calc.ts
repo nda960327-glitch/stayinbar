@@ -197,6 +197,8 @@ export function computeMonthly(
 
     const grossPay = baseSalary + incentive;
     const takeHome = computeTakeHome(grossPay, emp.taxMode);
+    const takeHome33 = computeTakeHome(grossPay, "3.3");
+    const takeHome4Ins = computeTakeHome(grossPay, "4insurance");
 
     reports.push({
       id: emp.id,
@@ -212,6 +214,8 @@ export function computeMonthly(
       incentive,
       grossPay,
       takeHome,
+      takeHome33,
+      takeHome4Ins,
       personal: {
         phone: emp.phone,
         rrn: emp.rrn,

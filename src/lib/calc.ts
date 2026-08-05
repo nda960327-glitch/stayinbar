@@ -13,11 +13,14 @@ import type {
 export function matchEmployee(name: string, employees: Employee[]): Employee | null {
   const n = name.replace(/\s/g, "").toLowerCase();
   for (const e of employees) {
-    for (const alias of [e.name, ...e.aliases]) {
+    const aliasList = [e.name, ...(e.aliases || [])];
+    for (const alias of aliasList) {
+      if (!alias) continue;
       const a = alias.replace(/\s/g, "").toLowerCase();
       if (a && (n === a || n.includes(a) || a.includes(n))) return e;
     }
   }
+
   return null;
 }
 

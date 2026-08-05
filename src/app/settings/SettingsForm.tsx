@@ -197,15 +197,15 @@ export default function SettingsForm() {
             <div className="grid cols-3 mt-s">
               <label className="field">
                 <span className="cap">이름</span>
-                <input value={e.name} onChange={(ev) => setEmp(idx, { name: ev.target.value })} />
+                <input value={e.name ?? ""} onChange={(ev) => setEmp(idx, { name: ev.target.value })} />
               </label>
               <label className="field">
                 <span className="cap">직책</span>
-                <input value={e.position} onChange={(ev) => setEmp(idx, { position: ev.target.value })} />
+                <input value={e.position ?? ""} onChange={(ev) => setEmp(idx, { position: ev.target.value })} />
               </label>
               <label className="field">
                 <span className="cap">역할</span>
-                <select value={e.role} onChange={(ev) => setEmp(idx, { role: ev.target.value as Employee["role"] })}>
+                <select value={e.role ?? "staff"} onChange={(ev) => setEmp(idx, { role: ev.target.value as Employee["role"] })}>
                   <option value="owner">사장</option>
                   <option value="manager">점장</option>
                   <option value="staff">직원</option>
@@ -215,7 +215,7 @@ export default function SettingsForm() {
               <label className="field">
                 <span className="cap">고용형태</span>
                 <select
-                  value={e.employmentType}
+                  value={e.employmentType ?? "salary"}
                   onChange={(ev) => setEmp(idx, { employmentType: ev.target.value as Employee["employmentType"] })}
                 >
                   <option value="salary">월급/연봉제</option>
@@ -227,24 +227,24 @@ export default function SettingsForm() {
                   <span className="cap">연봉 (원)</span>
                   <input
                     type="number"
-                    value={e.annualSalary}
+                    value={e.annualSalary ?? 0}
                     onChange={(ev) => setEmp(idx, { annualSalary: Number(ev.target.value) })}
                   />
-                  <span className="muted small">월 {won(Math.round(e.annualSalary / 12))}</span>
+                  <span className="muted small">월 {won(Math.round((e.annualSalary ?? 0) / 12))}</span>
                 </label>
               ) : (
                 <label className="field">
                   <span className="cap">시급 (원)</span>
                   <input
                     type="number"
-                    value={e.hourlyWage}
+                    value={e.hourlyWage ?? 0}
                     onChange={(ev) => setEmp(idx, { hourlyWage: Number(ev.target.value) })}
                   />
                 </label>
               )}
               <label className="field">
                 <span className="cap">세금 방식</span>
-                <select value={e.taxMode} onChange={(ev) => setEmp(idx, { taxMode: ev.target.value as Employee["taxMode"] })}>
+                <select value={e.taxMode ?? "3.3"} onChange={(ev) => setEmp(idx, { taxMode: ev.target.value as Employee["taxMode"] })}>
                   <option value="3.3">3.3% 원천징수</option>
                   <option value="4insurance">4대보험</option>
                 </select>
@@ -253,30 +253,30 @@ export default function SettingsForm() {
                 <span className="cap">근무시간/일</span>
                 <input
                   type="number"
-                  value={e.hoursPerDay}
+                  value={e.hoursPerDay ?? 9}
                   onChange={(ev) => setEmp(idx, { hoursPerDay: Number(ev.target.value) })}
                 />
               </label>
               <label className="field">
                 <span className="cap">PIN</span>
-                <input value={e.pin} onChange={(ev) => setEmp(idx, { pin: ev.target.value })} />
+                <input value={e.pin ?? ""} onChange={(ev) => setEmp(idx, { pin: ev.target.value })} />
               </label>
               <label className="field">
                 <span className="cap">전화번호</span>
-                <input value={e.phone} onChange={(ev) => setEmp(idx, { phone: ev.target.value })} />
+                <input value={e.phone ?? ""} onChange={(ev) => setEmp(idx, { phone: ev.target.value })} />
               </label>
               <label className="field">
                 <span className="cap">주민등록번호</span>
-                <input value={e.rrn} onChange={(ev) => setEmp(idx, { rrn: ev.target.value })} />
+                <input value={e.rrn ?? ""} onChange={(ev) => setEmp(idx, { rrn: ev.target.value })} />
               </label>
               <label className="field">
                 <span className="cap">입금 계좌</span>
-                <input value={e.bankAccount} onChange={(ev) => setEmp(idx, { bankAccount: ev.target.value })} />
+                <input value={e.bankAccount ?? ""} onChange={(ev) => setEmp(idx, { bankAccount: ev.target.value })} />
               </label>
               <label className="field">
                 <span className="cap">시트 이름(별칭, 쉼표로 구분)</span>
                 <input
-                  value={e.aliases.join(", ")}
+                  value={(e.aliases || []).join(", ")}
                   onChange={(ev) =>
                     setEmp(idx, {
                       aliases: ev.target.value.split(",").map((s) => s.trim()).filter(Boolean),
@@ -285,6 +285,7 @@ export default function SettingsForm() {
                   placeholder="Joon Manager, 준식"
                 />
               </label>
+
             </div>
             <label className="row" style={{ gap: 8 }}>
               <input

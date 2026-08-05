@@ -4,17 +4,12 @@ import type { AppConfig } from "./types";
 
 const CONFIG_PATH = path.join(process.cwd(), "data", "config.json");
 
-let cache: AppConfig | null = null;
-
 export async function getConfig(): Promise<AppConfig> {
-  if (cache) return cache;
   const raw = await fs.readFile(CONFIG_PATH, "utf-8");
-  cache = JSON.parse(raw) as AppConfig;
-  return cache;
+  return JSON.parse(raw) as AppConfig;
 }
 
 export async function saveConfig(config: AppConfig): Promise<void> {
-  cache = config;
   try {
     await fs.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
   } catch (e) {

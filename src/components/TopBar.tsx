@@ -36,8 +36,7 @@ export default function TopBar({
 
   async function logout() {
     await fetch("/api/logout", { method: "POST" });
-    router.push("/");
-    router.refresh();
+    window.location.href = "/";
   }
 
   return (

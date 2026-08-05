@@ -38,7 +38,8 @@ export async function getLogs(): Promise<{
       const { rows } = await fetchSheetCsv(config.sheetCsvUrl);
       await saveLogs(rows, "google-sheet");
       return { rows, source: "google-sheet", updatedAt: new Date().toISOString() };
-    } catch {
+    } catch (e) {
+      console.error("fetchSheetCsv Error:", e);
       // URL 실패 시 저장본으로 폴백
     }
   }

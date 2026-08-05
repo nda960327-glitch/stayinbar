@@ -140,9 +140,19 @@ export function parseCsvText(text: string): ParseResult {
   return parseWorkbook(wb);
 }
 
-// 구글시트 공개 CSV URL에서 데이터 로드
 export async function fetchSheetCsv(url: string): Promise<ParseResult> {
-  const res = await fetch(url, { cache: "no-store" });
+  let fetchUrl = url;
+  if (url.includes("/edit") || url.includes("/view")) {
+    const docIdMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    const gidMatch = url.match(/gid=([0-9]+)/);
+    if (docIdMatch) {
+      const docId = docIdMatch[1];
+      const gid = gidMatch ? gidMatch[1] : "0";
+      fetchUrl = \`https://docs.google.com/spreadsheets/d/\${docId}/export?format=csv&gid=\${gid}\`;
+    }
+  }
+
+  const res = await fetch(fetchUrl, { cache: "no-store" });
   if (!res.ok) throw new Error(`시트 로드 실패: ${res.status}`);
   const text = await res.text();
   return parseCsvText(text);

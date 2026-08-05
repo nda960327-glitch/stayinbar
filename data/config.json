@@ -7,7 +7,7 @@
   "vatRate": 0.1,
   "defaultHoursPerDay": 9,
   "defaultServerWage": 12000,
-  "sheetCsvUrl": "https://docs.google.com/spreadsheets/d/1tS5uY29cddvv5-_QAE2C-0CkOyIjIwb_UmgPuvIltHA/export?format=csv&gid=1583198180",
+  "sheetCsvUrl": "https://docs.google.com/spreadsheets/d/1tS5uY29cddvv5-_QAE2C-0CkOyIjIwb_UmgPuvIltHA/edit?gid=1583198180#gid=1583198180",
   "ownerPin": "1234",
   "variableCosts": {},
   "employees": [

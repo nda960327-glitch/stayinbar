@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { won, pct, maskRrn } from "@/lib/format";
 import type { EmployeeReport } from "@/lib/types";
+import ContractViewer from "@/components/ContractViewer";
 
 interface AiReport {
   status: "ok" | "insufficient" | "error";
@@ -200,6 +201,9 @@ export default function EmployeeDetail({
           </div>
         )}
       </div>
+
+      {/* 근로계약서 */}
+      <ContractViewer emp={emp} businessName="STAY IN BAR" isOwner={isOwner} />
 
       {/* AI 리포트 */}
       <div className="card mt" style={{ background: "var(--bg-2)" }}>

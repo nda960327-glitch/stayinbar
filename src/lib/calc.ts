@@ -227,6 +227,7 @@ export function computeMonthly(
         bankAccount: emp.bankAccount,
       },
       texts: agg.texts,
+      contract: emp.contract,
     });
   }
 

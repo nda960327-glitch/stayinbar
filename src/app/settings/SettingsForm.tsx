@@ -28,6 +28,7 @@ export default function SettingsForm() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [openContract, setOpenContract] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/config")
@@ -294,6 +295,97 @@ export default function SettingsForm() {
               />
               <span className="small">3% 인센티브 풀 대상 (점장)</span>
             </label>
+
+            {/* 근로계약서 */}
+            <div style={{ marginTop: 12 }}>
+              <button
+                className="btn ghost sm"
+                onClick={() => setOpenContract(openContract === e.id ? null : e.id)}
+                type="button"
+              >
+                {openContract === e.id ? "▲ 근로계약서 접기" : "📄 근로계약서 작성"}
+              </button>
+            </div>
+
+            {openContract === e.id && (
+              <div style={{ marginTop: 12, padding: 16, background: "var(--bg-1)", borderRadius: 8 }}>
+                <p className="muted small" style={{ marginBottom: 12 }}>
+                  아래 내용을 입력 후 위의 <strong>전체 저장</strong> 버튼을 누르세요.
+                </p>
+                <div className="grid cols-3">
+                  <label className="field">
+                    <span className="cap">계약 시작일</span>
+                    <input type="date" value={e.contract?.startDate ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, startDate: ev.target.value } })} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">계약 종료일 (비우면 무기한)</span>
+                    <input type="date" value={e.contract?.endDate ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, endDate: ev.target.value } })} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">계약서 작성일</span>
+                    <input type="date" value={e.contract?.signedAt ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, signedAt: ev.target.value } })} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">근무 장소</span>
+                    <input value={e.contract?.workLocation ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, workLocation: ev.target.value } })} placeholder="예: STAY IN BAR 서울 신당동" />
+                  </label>
+                  <label className="field">
+                    <span className="cap">사업장 주소</span>
+                    <input value={e.contract?.businessAddress ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, businessAddress: ev.target.value } })} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">담당 업무</span>
+                    <input value={e.contract?.jobDescription ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, jobDescription: ev.target.value } })} placeholder={e.position || "바텐더 업무"} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">시업 시각</span>
+                    <input type="time" value={e.contract?.workStartTime ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, workStartTime: ev.target.value } })} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">종업 시각</span>
+                    <input type="time" value={e.contract?.workEndTime ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, workEndTime: ev.target.value } })} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">휴게 시간 (분)</span>
+                    <input type="number" value={e.contract?.breakMinutes ?? 60} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, breakMinutes: Number(ev.target.value) } })} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">근무 요일</span>
+                    <input value={e.contract?.workDays ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, workDays: ev.target.value } })} placeholder="예: 월~일" />
+                  </label>
+                  <label className="field">
+                    <span className="cap">주휴일</span>
+                    <input value={e.contract?.weeklyRestDay ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, weeklyRestDay: ev.target.value } })} placeholder="예: 일요일" />
+                  </label>
+                  <label className="field">
+                    <span className="cap">연차 (일)</span>
+                    <input type="number" value={e.contract?.annualLeave ?? 15} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, annualLeave: Number(ev.target.value) } })} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">임금 지급일 (매월 N일)</span>
+                    <input type="number" value={e.contract?.paymentDate ?? 25} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, paymentDate: Number(ev.target.value) } })} />
+                  </label>
+                  <label className="field">
+                    <span className="cap">지급 방법</span>
+                    <input value={e.contract?.paymentMethod ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, paymentMethod: ev.target.value } })} placeholder="예: 계좌이체" />
+                  </label>
+                  <label className="field">
+                    <span className="cap">사업주 성명</span>
+                    <input value={e.contract?.ownerName ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, ownerName: ev.target.value } })} />
+                  </label>
+                </div>
+                <div className="row mt" style={{ gap: 20 }}>
+                  <label className="row" style={{ gap: 8 }}>
+                    <input type="checkbox" style={{ width: "auto" }} checked={e.contract?.ownerSigned ?? false} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, ownerSigned: ev.target.checked } })} />
+                    <span className="small">사업주 서명 완료</span>
+                  </label>
+                  <label className="row" style={{ gap: 8 }}>
+                    <input type="checkbox" style={{ width: "auto" }} checked={e.contract?.employeeSigned ?? false} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, employeeSigned: ev.target.checked } })} />
+                    <span className="small">근로자 서명 완료</span>
+                  </label>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

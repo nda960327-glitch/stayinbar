@@ -2,6 +2,26 @@ export type Role = "owner" | "manager" | "staff" | "server";
 export type EmploymentType = "salary" | "hourly";
 export type TaxMode = "3.3" | "4insurance";
 
+export interface EmploymentContract {
+  startDate: string;        // 근로 시작일 (YYYY-MM-DD)
+  endDate: string;          // 근로 종료일 (비워두면 기간의 정함 없음)
+  workLocation: string;     // 근무 장소
+  jobDescription: string;   // 담당 업무
+  workStartTime: string;    // 시업 시각 (HH:MM)
+  workEndTime: string;      // 종업 시각 (HH:MM)
+  breakMinutes: number;     // 휴게 시간(분)
+  workDays: string;         // 근무 요일
+  weeklyRestDay: string;    // 주휴일
+  annualLeave: number;      // 연차 일수
+  paymentDate: number;      // 임금 지급일 (매월 N일)
+  paymentMethod: string;    // 지급 방법
+  businessAddress: string;  // 사업장 주소
+  ownerName: string;        // 사업주 성명
+  ownerSigned: boolean;     // 사업주 서명 여부
+  employeeSigned: boolean;  // 근로자 서명 여부
+  signedAt: string;         // 계약서 작성일 (YYYY-MM-DD)
+}
+
 export interface Employee {
   id: string;
   name: string;
@@ -18,6 +38,7 @@ export interface Employee {
   rrn: string;
   bankAccount: string;
   pin: string;
+  contract?: Partial<EmploymentContract>;
 }
 
 export interface VariableCost {
@@ -87,6 +108,7 @@ export interface EmployeeReport {
     bankAccount: string;
   };
   texts: string[]; // AI 분석용 텍스트 모음
+  contract?: Partial<EmploymentContract>;
 }
 
 export interface OwnerPnL {

@@ -165,7 +165,7 @@ export default function OwnerDashboard() {
             <div className="stat">
               <div className="label">영업일수</div>
               <div className="value">{o.workingDays}일</div>
-              <div className="foot">1일 목표 150만원</div>
+              <div className="foot">1일 목표 {wonShort(o.workingDays > 0 ? Math.round(o.targetSales / o.workingDays) : 0)}원</div>
             </div>
             <div className="stat">
               <div className="label">최종 순수익</div>

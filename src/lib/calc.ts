@@ -136,6 +136,9 @@ export function computeMonthly(
   const totalSales = Array.from(dailyMax.values()).reduce((a, b) => a + b, 0);
   const workingDays = dailyMax.size;
   const targetSales = workingDays * config.dailyTarget;
+  
+  // 시트에서 합산한 해당 월의 총 재료비+주류비
+  const sheetMaterialCost = monthRows.reduce((sum, r) => sum + (r.materialCost || 0), 0);
 
   // 직원별 집계
   const byEmp = new Map<
@@ -236,7 +239,7 @@ export function computeMonthly(
     totalPayroll -
     totalIncentive -
     config.fixedCost -
-    vc.material -
+    sheetMaterialCost -
     vat -
     cardFee -
     vc.marketing;
@@ -250,7 +253,7 @@ export function computeMonthly(
     totalPayroll,
     totalIncentive,
     fixedCost: config.fixedCost,
-    materialCost: vc.material,
+    materialCost: sheetMaterialCost,
     vat,
     cardFee,
     marketingCost: vc.marketing,
@@ -267,5 +270,6 @@ export function computeMonthly(
     employees: reports,
     owner,
     unmatchedNames: Array.from(unmatched),
+    materialCost: sheetMaterialCost,
   };
 }

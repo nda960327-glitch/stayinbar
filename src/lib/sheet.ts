@@ -85,9 +85,10 @@ export function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
   const revenueCol = findCol(headers, ["매출", "revenue", "sales"]);
   const timestampCol = findCol(headers, ["타임스탬프", "timestamp", "제출"]);
   const hoursCol = findCol(headers, ["근무시간", "hours"]);
+  const costCol = findCol(headers, ["금액", "재료비", "주류비", "cost", "amount"]);
 
   // 텍스트(점수/AI 분석) 컬럼: 위에서 식별한 메타 컬럼 제외한 나머지
-  const metaCols = new Set([nameCol, dateCol, revenueCol, timestampCol, hoursCol].filter(Boolean) as string[]);
+  const metaCols = new Set([nameCol, dateCol, revenueCol, timestampCol, hoursCol, costCol].filter(Boolean) as string[]);
   const textCols = headers.filter((h) => !metaCols.has(h));
 
   const rows: LogRow[] = [];
@@ -129,6 +130,13 @@ export function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
       if (val) texts[c] = val;
       score += extractScore(r[c]);
     }
+    
+    let materialCost = 0;
+    if (costCol && r[costCol] !== undefined) {
+      const val = String(r[costCol]).replace(/[,\s원₩]/g, "");
+      const n = parseFloat(val);
+      if (!isNaN(n)) materialCost = Math.round(n);
+    }
 
     rows.push({
       timestamp: timestampCol ? String(r[timestampCol] ?? "") : "",
@@ -137,6 +145,7 @@ export function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
       revenue,
       score,
       workedHours: isNaN(workedHours as number) ? undefined : workedHours,
+      materialCost,
       texts,
     });
   }

@@ -18,7 +18,6 @@ export default function OwnerDashboard() {
   const [error, setError] = useState("");
 
   // 변동비 입력
-  const [material, setMaterial] = useState(0);
   const [marketing, setMarketing] = useState(0);
   const [savingCost, setSavingCost] = useState(false);
 
@@ -42,7 +41,6 @@ export default function OwnerDashboard() {
       }
       setData(json);
       setMonth(json.month);
-      setMaterial(json.owner.materialCost);
       setMarketing(json.owner.marketingCost);
     } catch {
       setError("네트워크 오류");
@@ -61,7 +59,7 @@ export default function OwnerDashboard() {
       const cfgRes = await fetch("/api/config");
       const cfg = await cfgRes.json();
       cfg.variableCosts = cfg.variableCosts ?? {};
-      cfg.variableCosts[month] = { material: Number(material) || 0, marketing: Number(marketing) || 0 };
+      cfg.variableCosts[month] = { ...cfg.variableCosts[month], marketing: Number(marketing) || 0 };
       await fetch("/api/config", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -214,16 +212,15 @@ export default function OwnerDashboard() {
               <span className="amt minus">- {won(o.cardFee)}</span>
             </div>
 
+            <div className="pnl-line">
+              <span className="name">
+                재료비 + 주류비 <span className="hint">시트 자동 합산</span>
+              </span>
+              <span className="amt minus">- {won(o.materialCost)}</span>
+            </div>
+
             {/* 입력 변동비 */}
-            <div className="grid cols-2 mt">
-              <label className="field">
-                <span className="cap">재료비 + 주류비 (입력)</span>
-                <input
-                  type="number"
-                  value={material}
-                  onChange={(e) => setMaterial(Number(e.target.value))}
-                />
-              </label>
+            <div className="grid cols-1 mt">
               <label className="field">
                 <span className="cap">마케팅 및 기타 (입력)</span>
                 <input

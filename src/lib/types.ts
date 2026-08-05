@@ -48,6 +48,7 @@ export interface LogRow {
   revenue: number;
   score: number;
   workedHours?: number; // 시트에서 추출한 실제 근무 시간
+  materialCost: number; // 시트에서 추출한 금액 (재료비 등)
   texts: Record<string, string>; // 컬럼명 -> 텍스트 (AI 분석용)
 }
 
@@ -112,4 +113,5 @@ export interface MonthlyResult {
   employees: EmployeeReport[];
   owner: OwnerPnL;
   unmatchedNames: string[]; // 시트에 있으나 직원 등록 안 된 이름
+  materialCost: number; // 해당 월의 스프레드시트에서 합산한 재료비+주류비
 }

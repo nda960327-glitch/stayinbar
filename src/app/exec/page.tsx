@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { won, wonShort, pct } from "@/lib/format";
 import type { MonthlyResult } from "@/lib/types";
 
+import TopBar from "@/components/TopBar";
+
 type ExecData = MonthlyResult & { businessName: string; source: string; updatedAt: string };
+
 
 export default function ExecPage() {
   const [pin, setPin] = useState("");
@@ -134,183 +137,187 @@ export default function ExecPage() {
 
   return (
     <>
-      {/* Header */}
-      <div className="row spread" style={{ marginBottom: 20 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: "1.4rem" }}>
-            {data.businessName || "STAY IN BAR"}
-            <span className="sub" style={{ marginLeft: 8 }}>임원 대시보드</span>
-          </h1>
-          <p className="muted small">
-            소스: {data.source === "google-sheet" ? "구글시트" : "업로드"}{" "}
-            {data.updatedAt ? `· ${new Date(data.updatedAt).toLocaleString("ko-KR")}` : ""}
+      <TopBar name="임원" role="exec" business={data.businessName || "STAY IN BAR"} />
+      <div className="container">
+        {/* Header */}
+        <div className="row spread" style={{ marginBottom: 20 }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: "1.4rem" }}>
+              {data.businessName || "STAY IN BAR"}
+              <span className="sub" style={{ marginLeft: 8 }}>임원 대시보드</span>
+            </h1>
+            <p className="muted small">
+              소스: {data.source === "google-sheet" ? "구글시트" : "업로드"}{" "}
+              {data.updatedAt ? `· ${new Date(data.updatedAt).toLocaleString("ko-KR")}` : ""}
+            </p>
+          </div>
+          <div className="row" style={{ gap: 12 }}>
+            <select
+              value={month}
+              onChange={(e) => { setMonth(e.target.value); loadData(e.target.value); }}
+              style={{ width: "auto" }}
+            >
+              {availableMonths.length === 0 && <option value={month}>{month || "데이터 없음"}</option>}
+              {availableMonths.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            <button className="btn ghost sm" onClick={handleLogout}>
+              로그아웃
+            </button>
+          </div>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid cols-4">
+          <div className="stat">
+            <div className="label">월 총매출</div>
+            <div className="value accent">{wonShort(o.totalSales ?? 0)}원</div>
+            <div className="foot">{won(o.totalSales ?? 0)}</div>
+          </div>
+          <div className="stat">
+            <div className="label">목표 달성률</div>
+            <div className={`value ${(o.targetAchievement ?? 0) >= 100 ? "green" : ""}`}>
+              {pct(o.targetAchievement ?? 0)}
+            </div>
+            <div className="foot">목표 {wonShort(o.targetSales ?? 0)}원</div>
+          </div>
+          <div className="stat">
+            <div className="label">영업일수</div>
+            <div className="value">{o.workingDays ?? 0}일</div>
+            <div className="foot">
+              1일 목표 {wonShort((o.workingDays ?? 0) > 0 ? Math.round((o.targetSales ?? 0) / o.workingDays) : 0)}원
+            </div>
+          </div>
+          <div className="stat">
+            <div className="label">최종 순수익</div>
+            <div className={`value ${(o.netProfit ?? 0) >= 0 ? "green" : "red"}`}>
+              {wonShort(o.netProfit ?? 0)}원
+            </div>
+            <div className="foot">{won(o.netProfit ?? 0)}</div>
+          </div>
+        </div>
+
+        {/* P&L */}
+        <div className="card mt">
+          <h2>손익 계산 <span className="sub">{month}</span></h2>
+
+          {[
+            { label: "월 총매출", value: o.totalSales ?? 0, plus: true },
+            { label: "총 급여 (세전)", value: o.totalPayroll ?? 0 },
+            { label: "총 인센티브", value: o.totalIncentive ?? 0 },
+            { label: "고정비 (월세 등)", value: o.fixedCost ?? 0 },
+            { label: "부가세 (10%)", value: o.vat ?? 0 },
+            { label: "카드수수료 (2%)", value: o.cardFee ?? 0 },
+            { label: "재료비 + 주류비", value: data.materialCost ?? 0 },
+            { label: "마케팅 및 기타", value: o.marketingCost ?? 0 },
+          ].map(({ label, value, plus }) => (
+            <div className="pnl-line" key={label}>
+              <span className="name">{label}</span>
+              <span className={`amt ${plus ? "" : "minus"}`}>
+                {plus ? "" : "- "}{won(value)}
+              </span>
+            </div>
+          ))}
+
+          {/* 재료비 상세 */}
+          {materialCostDetails.length > 0 && (
+            <div style={{ marginTop: 8, marginBottom: 8 }}>
+              <button
+                className="btn ghost sm"
+                onClick={() => setShowMaterial(!showMaterial)}
+              >
+                {showMaterial ? "▲ 재료비 상세 접기" : "▼ 재료비 상세내역 보기"}
+              </button>
+              {showMaterial && (
+                <div style={{ overflowX: "auto", marginTop: 8 }}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>날짜</th>
+                        <th style={{ textAlign: "right" }}>금액</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {materialCostDetails.map(({ date, amount }) => (
+                        <tr key={date}>
+                          <td>{date}</td>
+                          <td style={{ textAlign: "right" }}>{won(amount)}</td>
+                        </tr>
+                      ))}
+                      <tr className="total">
+                        <td>합계</td>
+                        <td style={{ textAlign: "right" }}>
+                          {won(materialCostDetails.reduce((s, r) => s + r.amount, 0))}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="pnl-line result mt">
+            <span className="name">최종 순수익</span>
+            <span className={`amt ${(o.netProfit ?? 0) < 0 ? "red" : ""}`}>{won(o.netProfit ?? 0)}</span>
+          </div>
+          <p className="muted small mt-s">
+            순수익 = 매출 − 급여 − 인센티브 − 고정비 − 부가세 − 카드수수료 − 재료비/주류비 − 마케팅및기타
           </p>
         </div>
-        <div className="row" style={{ gap: 12 }}>
-          <select
-            value={month}
-            onChange={(e) => { setMonth(e.target.value); loadData(e.target.value); }}
-            style={{ width: "auto" }}
-          >
-            {availableMonths.length === 0 && <option value={month}>{month || "데이터 없음"}</option>}
-            {availableMonths.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-          <button className="btn ghost sm" onClick={handleLogout}>
-            로그아웃
-          </button>
-        </div>
-      </div>
 
-      {/* KPI Cards */}
-      <div className="grid cols-4">
-        <div className="stat">
-          <div className="label">월 총매출</div>
-          <div className="value accent">{wonShort(o.totalSales ?? 0)}원</div>
-          <div className="foot">{won(o.totalSales ?? 0)}</div>
-        </div>
-        <div className="stat">
-          <div className="label">목표 달성률</div>
-          <div className={`value ${(o.targetAchievement ?? 0) >= 100 ? "green" : ""}`}>
-            {pct(o.targetAchievement ?? 0)}
+        {/* Employee Table */}
+        <div className="card mt">
+          <h2>직원 현황 <span className="sub">{month}</span></h2>
+          <div style={{ overflowX: "auto" }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>직원</th>
+                  <th>출근</th>
+                  <th>근무시간</th>
+                  <th>기여율</th>
+                  <th>급여 (세전)</th>
+                  <th>인센티브</th>
+                  <th>합계 (세전)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((e) => (
+                  <tr key={e.id}>
+                    <td>
+                      {e.name}
+                      <div className="muted small">{e.position}</div>
+                    </td>
+                    <td>{e.attendanceDays}일</td>
+                    <td>{e.hoursWorked}h</td>
+                    <td>{pct(e.contributionRate)}</td>
+                    <td>{won(e.baseSalary)}</td>
+                    <td>{won(e.incentive)}</td>
+                    <td>{won(e.grossPay)}</td>
+                  </tr>
+                ))}
+                <tr className="total">
+                  <td>합계</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td>{won(o.totalPayroll ?? 0)}</td>
+                  <td>{won(o.totalIncentive ?? 0)}</td>
+                  <td>{won((o.totalPayroll ?? 0) + (o.totalIncentive ?? 0))}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div className="foot">목표 {wonShort(o.targetSales ?? 0)}원</div>
         </div>
-        <div className="stat">
-          <div className="label">영업일수</div>
-          <div className="value">{o.workingDays ?? 0}일</div>
-          <div className="foot">
-            1일 목표 {wonShort((o.workingDays ?? 0) > 0 ? Math.round((o.targetSales ?? 0) / o.workingDays) : 0)}원
-          </div>
-        </div>
-        <div className="stat">
-          <div className="label">최종 순수익</div>
-          <div className={`value ${(o.netProfit ?? 0) >= 0 ? "green" : "red"}`}>
-            {wonShort(o.netProfit ?? 0)}원
-          </div>
-          <div className="foot">{won(o.netProfit ?? 0)}</div>
-        </div>
-      </div>
 
-      {/* P&L */}
-      <div className="card mt">
-        <h2>손익 계산 <span className="sub">{month}</span></h2>
-
-        {[
-          { label: "월 총매출", value: o.totalSales ?? 0, plus: true },
-          { label: "총 급여 (세전)", value: o.totalPayroll ?? 0 },
-          { label: "총 인센티브", value: o.totalIncentive ?? 0 },
-          { label: "고정비 (월세 등)", value: o.fixedCost ?? 0 },
-          { label: "부가세 (10%)", value: o.vat ?? 0 },
-          { label: "카드수수료 (2%)", value: o.cardFee ?? 0 },
-          { label: "재료비 + 주류비", value: data.materialCost ?? 0 },
-          { label: "마케팅 및 기타", value: o.marketingCost ?? 0 },
-        ].map(({ label, value, plus }) => (
-          <div className="pnl-line" key={label}>
-            <span className="name">{label}</span>
-            <span className={`amt ${plus ? "" : "minus"}`}>
-              {plus ? "" : "- "}{won(value)}
-            </span>
-          </div>
-        ))}
-
-        {/* 재료비 상세 */}
-        {materialCostDetails.length > 0 && (
-          <div style={{ marginTop: 8, marginBottom: 8 }}>
-            <button
-              className="btn ghost sm"
-              onClick={() => setShowMaterial(!showMaterial)}
-            >
-              {showMaterial ? "▲ 재료비 상세 접기" : "▼ 재료비 상세내역 보기"}
-            </button>
-            {showMaterial && (
-              <div style={{ overflowX: "auto", marginTop: 8 }}>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>날짜</th>
-                      <th style={{ textAlign: "right" }}>금액</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {materialCostDetails.map(({ date, amount }) => (
-                      <tr key={date}>
-                        <td>{date}</td>
-                        <td style={{ textAlign: "right" }}>{won(amount)}</td>
-                      </tr>
-                    ))}
-                    <tr className="total">
-                      <td>합계</td>
-                      <td style={{ textAlign: "right" }}>
-                        {won(materialCostDetails.reduce((s, r) => s + r.amount, 0))}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="pnl-line result mt">
-          <span className="name">최종 순수익</span>
-          <span className={`amt ${(o.netProfit ?? 0) < 0 ? "red" : ""}`}>{won(o.netProfit ?? 0)}</span>
-        </div>
-        <p className="muted small mt-s">
-          순수익 = 매출 − 급여 − 인센티브 − 고정비 − 부가세 − 카드수수료 − 재료비/주류비 − 마케팅및기타
+        {/* Footer */}
+        <p className="muted small" style={{ textAlign: "center", marginTop: 32 }}>
+          STAY IN BAR · 임원 전용 · 이 페이지의 내용은 외부 공유 금지
         </p>
       </div>
-
-      {/* Employee Table */}
-      <div className="card mt">
-        <h2>직원 현황 <span className="sub">{month}</span></h2>
-        <div style={{ overflowX: "auto" }}>
-          <table>
-            <thead>
-              <tr>
-                <th>직원</th>
-                <th>출근</th>
-                <th>근무시간</th>
-                <th>기여율</th>
-                <th>급여 (세전)</th>
-                <th>인센티브</th>
-                <th>합계 (세전)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map((e) => (
-                <tr key={e.id}>
-                  <td>
-                    {e.name}
-                    <div className="muted small">{e.position}</div>
-                  </td>
-                  <td>{e.attendanceDays}일</td>
-                  <td>{e.hoursWorked}h</td>
-                  <td>{pct(e.contributionRate)}</td>
-                  <td>{won(e.baseSalary)}</td>
-                  <td>{won(e.incentive)}</td>
-                  <td>{won(e.grossPay)}</td>
-                </tr>
-              ))}
-              <tr className="total">
-                <td>합계</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>{won(o.totalPayroll ?? 0)}</td>
-                <td>{won(o.totalIncentive ?? 0)}</td>
-                <td>{won((o.totalPayroll ?? 0) + (o.totalIncentive ?? 0))}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <p className="muted small" style={{ textAlign: "center", marginTop: 32 }}>
-        STAY IN BAR · 임원 전용 · 이 페이지의 내용은 외부 공유 금지
-      </p>
     </>
   );
 }
+

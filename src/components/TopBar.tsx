@@ -49,10 +49,11 @@ export default function TopBar({
         </div>
       </div>
       <div className="who">
-        <span className={`pill ${role === "owner" ? "owner" : ""}`}>
+        <span className={`pill ${role === "owner" || role === "exec" ? "owner" : ""}`}>
           {name}
-          {role === "owner" ? " · 사장" : ""}
+          {role === "owner" ? " · 사장" : role === "exec" ? " · 임원" : ""}
         </span>
+
         {role === "owner" && (
           <>
             <a href="/owner">대시보드</a>

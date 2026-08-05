@@ -209,6 +209,10 @@ export default function OwnerDashboard() {
               <span className="name">부가세 (매출의 10%)</span>
               <span className="amt minus">- {won(o.vat)}</span>
             </div>
+            <div className="pnl-line">
+              <span className="name">카드수수료 (매출의 2%)</span>
+              <span className="amt minus">- {won(o.cardFee)}</span>
+            </div>
 
             {/* 입력 변동비 */}
             <div className="grid cols-2 mt">
@@ -238,7 +242,7 @@ export default function OwnerDashboard() {
               <span className={`amt ${o.netProfit < 0 ? "red" : ""}`}>{won(o.netProfit)}</span>
             </div>
             <p className="muted small mt-s">
-              순수익 = 매출 − 급여 − 인센티브 − 고정비 − 부가세 − 재료비/주류비 − 마케팅및기타
+              순수익 = 매출 − 급여 − 인센티브 − 고정비 − 부가세 − 카드수수료 − 재료비/주류비 − 마케팅및기타
             </p>
           </div>
 

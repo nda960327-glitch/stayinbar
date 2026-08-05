@@ -97,6 +97,7 @@ export interface OwnerPnL {
   fixedCost: number;
   materialCost: number; // 재료비 + 주류비 (입력)
   vat: number; // 부가세
+  cardFee: number; // 카드 수수료
   marketingCost: number; // 마케팅 및 기타 (입력)
   netProfit: number;
 }

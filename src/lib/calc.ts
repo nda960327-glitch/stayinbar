@@ -230,6 +230,7 @@ export function computeMonthly(
 
   const vc = config.variableCosts[targetMonth] ?? { material: 0, marketing: 0 };
   const vat = Math.round(totalSales * config.vatRate);
+  const cardFee = Math.round(totalSales * 0.02);
   const netProfit =
     totalSales -
     totalPayroll -
@@ -237,6 +238,7 @@ export function computeMonthly(
     config.fixedCost -
     vc.material -
     vat -
+    cardFee -
     vc.marketing;
 
   const owner: OwnerPnL = {
@@ -250,6 +252,7 @@ export function computeMonthly(
     fixedCost: config.fixedCost,
     materialCost: vc.material,
     vat,
+    cardFee,
     marketingCost: vc.marketing,
     netProfit,
   };

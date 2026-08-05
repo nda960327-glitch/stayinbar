@@ -209,6 +209,8 @@ export function computeMonthly(
       position: emp.position,
       role: emp.role,
       employmentType: emp.employmentType,
+      annualSalary: emp.annualSalary,
+      hourlyWage: emp.hourlyWage,
       attendanceDays,
       hoursWorked,
       score: agg.score,

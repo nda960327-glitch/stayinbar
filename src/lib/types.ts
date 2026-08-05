@@ -69,6 +69,8 @@ export interface EmployeeReport {
   position: string;
   role: Role;
   employmentType: EmploymentType;
+  annualSalary: number;
+  hourlyWage: number;
   attendanceDays: number;
   hoursWorked: number;
   score: number;

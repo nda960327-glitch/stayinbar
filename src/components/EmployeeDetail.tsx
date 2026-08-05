@@ -95,7 +95,9 @@ export default function EmployeeDetail({
           <div className="label">이번달 예상 급여</div>
           <div className="value sm accent">{won(emp.baseSalary)}</div>
           <div className="foot">
-            {emp.employmentType === "hourly" ? "시급제" : "월급제"}
+            {emp.employmentType === "hourly"
+              ? `시급 ${won(emp.hourlyWage)}`
+              : `연봉 ${won(emp.annualSalary)}`}
           </div>
         </div>
         <div className="stat">

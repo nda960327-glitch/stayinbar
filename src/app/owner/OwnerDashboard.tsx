@@ -235,18 +235,22 @@ export default function OwnerDashboard() {
                       <thead>
                         <tr>
                           <th>날짜</th>
+                          <th>구매 내역 / 품목</th>
+                          <th>구매자</th>
                           <th style={{ textAlign: "right" }}>금액</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {data.materialCostDetails.map(({ date, amount }) => (
-                          <tr key={date}>
-                            <td>{date}</td>
-                            <td style={{ textAlign: "right" }}>{won(amount)}</td>
+                        {data.materialCostDetails.map((r, idx) => (
+                          <tr key={idx}>
+                            <td>{r.date}</td>
+                            <td style={{ fontWeight: 500 }}>{r.item || "-"}</td>
+                            <td>{r.buyer || "-"}</td>
+                            <td style={{ textAlign: "right" }}>{won(r.amount)}</td>
                           </tr>
                         ))}
                         <tr className="total">
-                          <td>합계</td>
+                          <td colSpan={3}>합계</td>
                           <td style={{ textAlign: "right" }}>
                             {won(data.materialCostDetails.reduce((s, r) => s + r.amount, 0))}
                           </td>

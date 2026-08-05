@@ -128,6 +128,13 @@ export interface OwnerPnL {
   netProfit: number;
 }
 
+export interface MaterialDetailItem {
+  date: string;
+  item: string;    // 품목/구매내역 (뭐 샀는지)
+  buyer: string;   // 구매자/작성자
+  amount: number;  // 금액
+}
+
 export interface MonthlyResult {
   month: string;
   availableMonths: string[];
@@ -139,5 +146,6 @@ export interface MonthlyResult {
   owner: OwnerPnL;
   unmatchedNames: string[]; // 시트에 있으나 직원 등록 안 된 이름
   materialCost: number; // 해당 월의 스프레드시트에서 합산한 재료비+주류비
-  materialCostDetails: { date: string; amount: number }[];
+  materialCostDetails: MaterialDetailItem[];
 }
+

@@ -266,16 +266,27 @@ export function computeMonthly(
     netProfit,
   };
 
-  // 날짜별 재료비 집계
-  const costByDate = new Map<string, number>();
-  for (const r of monthRows) {
-    if (r.materialCost > 0) {
-      costByDate.set(r.date, (costByDate.get(r.date) ?? 0) + r.materialCost);
-    }
-  }
-  const materialCostDetails = Array.from(costByDate.entries())
-    .map(([date, amount]) => ({ date, amount }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  // 재료비 상세 내역 (날짜, 품목/내역, 구매자, 금액)
+  const materialCostDetails = monthRows
+    .filter((r) => r.materialCost > 0)
+    .map((r) => {
+      const emp = matchEmployee(r.name, config.employees);
+      const buyer = emp ? emp.name : r.name;
+      // "재고주문내역" 또는 "수행한 업무" 등에서 텍스트 추출
+      const item =
+        r.texts["재고주문내역"] ||
+        r.texts["재고주문"] ||
+        r.texts["수행한 업무"] ||
+        "재고/재료 구매";
+      return {
+        date: r.date,
+        item,
+        buyer,
+        amount: r.materialCost,
+      };
+    })
+    .sort((a, b) => b.date.localeCompare(a.date));
+
 
   return {
     month: targetMonth,

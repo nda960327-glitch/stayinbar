@@ -97,8 +97,21 @@ export function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
     if (!name && !date) continue;
 
     const revenue = revenueCol ? parseRevenue(r[revenueCol]) : 0;
-    const hoursStr = hoursCol ? String(r[hoursCol] ?? "").trim() : "";
-    const workedHours = hoursStr ? parseFloat(hoursStr.replace(/[^0-9.]/g, "")) : undefined;
+    let workedHours: number | undefined;
+    if (hoursCol && r[hoursCol] !== undefined) {
+      const val = String(r[hoursCol]).trim();
+      if (val.includes(":")) {
+        const parts = val.split(":");
+        const h = Number(parts[0]) || 0;
+        const m = Number(parts[1]) || 0;
+        const s = Number(parts[2]) || 0;
+        const total = h + (m / 60) + (s / 3600);
+        if (total > 0) workedHours = Math.round(total * 10) / 10;
+      } else if (val) {
+        const h = Number(val.replace(/[^0-9.]/g, ""));
+        if (!isNaN(h) && h > 0) workedHours = h;
+      }
+    }
     let score = 0;
     const texts: Record<string, string> = {};
     for (const c of textCols) {

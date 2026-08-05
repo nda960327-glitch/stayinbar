@@ -140,7 +140,7 @@ export function computeMonthly(
   // 직원별 집계
   const byEmp = new Map<
     string,
-    { dates: Set<string>; score: number; texts: string[] }
+    { dates: Set<string>; score: number; texts: string[]; totalHours: number }
   >();
   const unmatched = new Set<string>();
 
@@ -153,11 +153,12 @@ export function computeMonthly(
     if (emp.role === "owner") continue; // 사장은 급여/인센티브 대상 제외
     let agg = byEmp.get(emp.id);
     if (!agg) {
-      agg = { dates: new Set(), score: 0, texts: [] };
+      agg = { dates: new Set(), score: 0, texts: [], totalHours: 0 };
       byEmp.set(emp.id, agg);
     }
     if (r.date) agg.dates.add(r.date);
     agg.score += r.score;
+    agg.totalHours += typeof r.workedHours === "number" ? r.workedHours : (emp.hoursPerDay || config.defaultHoursPerDay);
     for (const [k, v] of Object.entries(r.texts)) {
       if (v && v.length > 1) agg.texts.push(`[${k}] ${v}`);
     }
@@ -175,9 +176,9 @@ export function computeMonthly(
   const reports: EmployeeReport[] = [];
   for (const emp of config.employees) {
     if (emp.role === "owner") continue;
-    const agg = byEmp.get(emp.id) ?? { dates: new Set<string>(), score: 0, texts: [] };
+    const agg = byEmp.get(emp.id) ?? { dates: new Set<string>(), score: 0, texts: [], totalHours: 0 };
     const attendanceDays = agg.dates.size;
-    const hoursWorked = attendanceDays * (emp.hoursPerDay || config.defaultHoursPerDay);
+    const hoursWorked = agg.totalHours;
     const contributionRate = totalScore > 0 ? (agg.score / totalScore) * 100 : 0;
 
     // 급여

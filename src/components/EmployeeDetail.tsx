@@ -24,6 +24,29 @@ export default function EmployeeDetail({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiErr, setAiErr] = useState("");
   const [showRrn, setShowRrn] = useState(false);
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [infoForm, setInfoForm] = useState({ phone: emp.personal.phone, rrn: emp.personal.rrn, bankAccount: emp.personal.bankAccount });
+  const [savingInfo, setSavingInfo] = useState(false);
+
+  async function saveInfo() {
+    setSavingInfo(true);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(infoForm),
+      });
+      if (res.ok) {
+        setEditingInfo(false);
+        // Refresh page or assume success
+        window.location.reload();
+      } else {
+        alert("저장에 실패했습니다.");
+      }
+    } finally {
+      setSavingInfo(false);
+    }
+  }
 
   async function generate() {
     setAiLoading(true);
@@ -139,8 +162,33 @@ export default function EmployeeDetail({
             <div className="value sm">{p.bankAccount || "-"}</div>
           </div>
         </div>
-        {isOwner && (
+        {isOwner ? (
           <p className="muted small mt-s">개인정보는 설정 페이지에서 수정할 수 있습니다.</p>
+        ) : editingInfo ? (
+          <div className="mt" style={{ background: "var(--bg-1)", padding: 16, borderRadius: 8 }}>
+            <div className="grid cols-1">
+              <label className="field">
+                <span className="cap">전화번호</span>
+                <input value={infoForm.phone} onChange={e => setInfoForm({ ...infoForm, phone: e.target.value })} />
+              </label>
+              <label className="field">
+                <span className="cap">주민등록번호</span>
+                <input value={infoForm.rrn} onChange={e => setInfoForm({ ...infoForm, rrn: e.target.value })} />
+              </label>
+              <label className="field">
+                <span className="cap">입금 계좌</span>
+                <input value={infoForm.bankAccount} onChange={e => setInfoForm({ ...infoForm, bankAccount: e.target.value })} />
+              </label>
+            </div>
+            <div className="row mt" style={{ gap: 8 }}>
+              <button className="btn sm" onClick={saveInfo} disabled={savingInfo}>{savingInfo ? "저장 중..." : "저장"}</button>
+              <button className="btn ghost sm" onClick={() => setEditingInfo(false)} disabled={savingInfo}>취소</button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt">
+            <button className="btn sm ghost" onClick={() => setEditingInfo(true)}>개인정보 수정</button>
+          </div>
         )}
       </div>
 

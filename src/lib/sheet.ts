@@ -84,9 +84,10 @@ export function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
   const dateCol = findCol(headers, ["영업일", "날짜", "date"]);
   const revenueCol = findCol(headers, ["매출", "revenue", "sales"]);
   const timestampCol = findCol(headers, ["타임스탬프", "timestamp", "제출"]);
+  const hoursCol = findCol(headers, ["근무시간", "hours"]);
 
   // 텍스트(점수/AI 분석) 컬럼: 위에서 식별한 메타 컬럼 제외한 나머지
-  const metaCols = new Set([nameCol, dateCol, revenueCol, timestampCol].filter(Boolean) as string[]);
+  const metaCols = new Set([nameCol, dateCol, revenueCol, timestampCol, hoursCol].filter(Boolean) as string[]);
   const textCols = headers.filter((h) => !metaCols.has(h));
 
   const rows: LogRow[] = [];
@@ -96,6 +97,8 @@ export function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
     if (!name && !date) continue;
 
     const revenue = revenueCol ? parseRevenue(r[revenueCol]) : 0;
+    const hoursStr = hoursCol ? String(r[hoursCol] ?? "").trim() : "";
+    const workedHours = hoursStr ? parseFloat(hoursStr.replace(/[^0-9.]/g, "")) : undefined;
     let score = 0;
     const texts: Record<string, string> = {};
     for (const c of textCols) {
@@ -110,6 +113,7 @@ export function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
       date,
       revenue,
       score,
+      workedHours: isNaN(workedHours as number) ? undefined : workedHours,
       texts,
     });
   }

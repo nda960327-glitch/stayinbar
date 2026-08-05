@@ -47,6 +47,7 @@ export interface LogRow {
   date: string; // YYYY-MM-DD
   revenue: number;
   score: number;
+  workedHours?: number; // 시트에서 추출한 실제 근무 시간
   texts: Record<string, string>; // 컬럼명 -> 텍스트 (AI 분석용)
 }
 

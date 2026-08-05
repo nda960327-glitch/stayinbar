@@ -7,7 +7,7 @@
   "vatRate": 0.1,
   "defaultHoursPerDay": 9,
   "defaultServerWage": 12000,
-  "sheetCsvUrl": "",
+  "sheetCsvUrl": "https://docs.google.com/spreadsheets/d/1tS5uY29cddvv5-_QAE2C-0CkOyIjIwb_UmgPuvIltHA/export?format=csv&gid=1583198180",
   "ownerPin": "1234",
   "variableCosts": {},
   "employees": [
@@ -40,7 +40,8 @@
       "name": "양현영",
       "aliases": [
         "양현영",
-        "현영"
+        "현영",
+        "Hyeonyoung"
       ],
       "role": "staff",
       "position": "바텐더",
@@ -60,7 +61,8 @@
       "name": "김민건",
       "aliases": [
         "김민건",
-        "민건"
+        "민건",
+        "Mingun"
       ],
       "role": "staff",
       "position": "바텐더",
@@ -74,6 +76,27 @@
       "rrn": "",
       "bankAccount": "",
       "pin": "3333"
+    },
+    {
+      "id": "server-1",
+      "name": "서버1",
+      "aliases": [
+        "서버1",
+        "서버2",
+        "서버"
+      ],
+      "role": "server",
+      "position": "서버",
+      "employmentType": "hourly",
+      "annualSalary": 0,
+      "hourlyWage": 12000,
+      "taxMode": "3.3",
+      "hoursPerDay": 9,
+      "getsPool3": false,
+      "phone": "",
+      "rrn": "",
+      "bankAccount": "",
+      "pin": "4444"
     },
     {
       "id": "owner-doa",

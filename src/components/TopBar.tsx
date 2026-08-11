@@ -54,6 +54,7 @@ export default function TopBar({
           {role === "owner" ? " · 사장" : role === "exec" ? " · 임원" : ""}
         </span>
 
+        <a href="/customers">고객관리</a>
         {role === "owner" && (
           <>
             <a href="/owner">대시보드</a>

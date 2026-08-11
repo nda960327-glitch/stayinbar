@@ -173,6 +173,7 @@
       <h1>단골 장부</h1>
     </div>
     <div class="who">
+      <span class="pill hide" id="sync-pill"></span>
       <span class="rolepill" id="role-pill"></span>
       <button class="btn ghost sm" id="logout">잠그기</button>
     </div>
@@ -291,7 +292,7 @@
   <section id="p-data" class="hide">
     <div class="card">
       <h2>백업과 복원</h2>
-      <p class="desc">손님 정보는 이 기기 브라우저 안에만 저장됩니다. 기기를 바꾸거나 초기화하면 사라지니 한 달에 한 번은 백업해 두세요.</p>
+      <p class="desc" id="backup-desc">손님 정보는 이 기기 브라우저 안에만 저장됩니다. 기기를 바꾸거나 초기화하면 사라지니 한 달에 한 번은 백업해 두세요.</p>
       <div class="row" style="margin-top:0">
         <button class="btn ghost" id="backup">백업 파일 받기</button>
         <button class="btn ghost" id="restore">백업 불러오기</button>
@@ -314,8 +315,10 @@
 <div class="toast" id="toast"><span id="toast-msg"></span><button id="toast-undo" class="hide">되돌리기</button></div>
 
 <script>
-const K={C:'stayin.crm.customers.v1',E:'stayin.crm.events.v1',P:'stayin.crm.pins.v1',R:'stayin.crm.role'};
-let C=[],E=[],P=null,role=null,editing=null,hist=[],toastTimer=null,reRows=[];
+const K={C:'stayin.crm.customers.v1',E:'stayin.crm.events.v1',P:'stayin.crm.pins.v1',R:'stayin.crm.role',D:'stayin.crm.deleted.v1',PIN:'stayin.crm.pin'};
+let C=[],E=[],D=[],P=null,role=null,editing=null,hist=[],toastTimer=null,reRows=[];
+/* MODE: 'server' = 모든 기기가 한 장부 공유(온라인), 'local' = 이 기기에만 저장 */
+let MODE='local',SPIN=null,pushTimer=null,pushing=false;
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
@@ -329,6 +332,7 @@ const month=()=>new Date().getMonth()+1;
 function loadAll(){
   try{C=JSON.parse(localStorage.getItem(K.C)||'[]')}catch(e){C=[]}
   try{E=JSON.parse(localStorage.getItem(K.E)||'[]')}catch(e){E=[]}
+  try{D=JSON.parse(localStorage.getItem(K.D)||'[]')}catch(e){D=[]}
   try{P=JSON.parse(localStorage.getItem(K.P)||'null')}catch(e){P=null}
   /* 예전 손님 장부(stayin-guest-book) 데이터 자동 이어받기 */
   if(!C.length){
@@ -343,9 +347,56 @@ function loadAll(){
     }catch(e){}
   }
 }
-function persist(){
+function persistLocal(){
   localStorage.setItem(K.C,JSON.stringify(C));
   localStorage.setItem(K.E,JSON.stringify(E));
+  localStorage.setItem(K.D,JSON.stringify(D));
+}
+function persist(){
+  persistLocal();
+  if(MODE==='server'&&SPIN)schedulePush();
+}
+
+/* ─── 서버 공유 장부 ─── */
+async function api(body){
+  const r=await fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw j;
+  return j;
+}
+function adopt(d){
+  C=Array.isArray(d.customers)?d.customers:[];
+  E=Array.isArray(d.events)?d.events:[];
+  D=Array.isArray(d.deleted)?d.deleted:[];
+  persistLocal();render();
+}
+function schedulePush(){clearTimeout(pushTimer);pushTimer=setTimeout(doPush,400);}
+async function doPush(){
+  pushTimer=null;
+  if(pushing){schedulePush();return;}
+  pushing=true;
+  try{
+    const d=await api({action:'save',pin:SPIN,customers:C,events:E,deleted:D});
+    if(!pushTimer)adopt(d); /* 보내는 사이 새 변경이 없을 때만 서버 결과 반영 */
+    setSync('ok');
+  }catch(e){setSync('err');}
+  finally{pushing=false;}
+}
+async function refreshFromServer(){
+  if(MODE!=='server'||!SPIN||pushing)return;
+  try{const d=await api({action:'load',pin:SPIN});if(!pushTimer)adopt(d);setSync('ok');}catch(e){setSync('err');}
+}
+function startPoll(){
+  if(startPoll.on)return;startPoll.on=true;
+  setInterval(refreshFromServer,30000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshFromServer();});
+}
+function setSync(s){
+  const el=$('#sync-pill');if(!el)return;
+  el.classList.remove('hide');
+  if(MODE!=='server'){el.textContent='이 기기 전용';el.style.color='';el.style.borderColor='';return;}
+  if(s==='err'){el.textContent='동기화 오류';el.style.color='var(--alert)';el.style.borderColor='var(--alert)';}
+  else{el.textContent='공유 장부 ✓';el.style.color='var(--leaf)';el.style.borderColor='var(--leaf)';}
 }
 
 /* ─── 알림 · 되돌리기 ─── */
@@ -358,7 +409,7 @@ function toast(msg,withUndo){
 }
 /* 최근 20개 동작을 기억해 두고 차례로 되돌립니다 (도장·완주·삭제·등록·수정·복원·전부지우기) */
 function pushHist(label){
-  hist.push({label,C:JSON.parse(JSON.stringify(C)),E:JSON.parse(JSON.stringify(E))});
+  hist.push({label,C:JSON.parse(JSON.stringify(C)),E:JSON.parse(JSON.stringify(E)),D:JSON.parse(JSON.stringify(D))});
   if(hist.length>20)hist.shift();
   updateFab();
 }
@@ -369,7 +420,18 @@ function updateFab(){
 }
 function undoLast(){
   const h=hist.pop();if(!h)return;
-  C=h.C;E=h.E;persist();render();updateFab();
+  const prevC=C;
+  C=h.C;E=h.E;D=h.D||D;
+  if(MODE==='server'){
+    /* 공유 모드: 되돌린 결과가 서버 병합에서 이기도록 수정 시각을 갱신 */
+    const now=Date.now();
+    const before=new Map(prevC.map(c=>[c.id,JSON.stringify(c)]));
+    C.forEach(c=>{if(before.get(c.id)!==JSON.stringify(c))c.u=now;});
+    const alive=new Set(C.map(c=>c.id));
+    prevC.forEach(c=>{if(!alive.has(c.id))D.push({id:c.id,at:now});});
+    D=D.filter(d=>{const live=C.find(c=>c.id===d.id);return !live||(live.u||0)<d.at;});
+  }
+  persist();render();updateFab();
   $('#toast').classList.remove('on');
   setTimeout(()=>toast(`'${h.label}' 취소했습니다`),120);
 }
@@ -382,34 +444,69 @@ function showApp(){
   $('#app').classList.remove('hide');
   $('#role-pill').textContent=role==='owner'?'사장':'직원';
   $$('.owner-only').forEach(el=>el.classList.toggle('hide',role!=='owner'));
+  if(MODE==='server'){
+    $('#backup-desc').textContent='손님 정보는 공유 장부(서버)에 저장되어 모든 기기에서 똑같이 보입니다. 그래도 한 달에 한 번 백업을 받아두시면 더 안전합니다.';
+  }
+  setSync('ok');
   render();
   setTimeout(()=>$('#q').focus(),100);
 }
 function unlock(r){
   role=r;sessionStorage.setItem(K.R,r);showApp();
 }
-$('#logout').onclick=()=>{sessionStorage.removeItem(K.R);location.reload();};
+$('#logout').onclick=()=>{sessionStorage.removeItem(K.R);sessionStorage.removeItem(K.PIN);location.reload();};
 
-$('#su-save').onclick=()=>{
+$('#su-save').onclick=async()=>{
   const s=$('#su-staff').value.trim(),o=$('#su-owner').value.trim();
   if(!/^\d{4}$/.test(s)||!/^\d{4}$/.test(o))return toast('PIN은 숫자 4자리로 정해주세요');
   if(s===o)return toast('직원 PIN과 사장 PIN은 달라야 합니다');
+  if(MODE==='server'){
+    try{
+      await api({action:'setup',pins:{staff:s,owner:o}});
+      SPIN=o;sessionStorage.setItem(K.PIN,o);
+      unlock('owner');startPoll();setSync('ok');
+      if(C.length||E.length)schedulePush(); /* 이 기기에 있던 장부를 서버로 올림 */
+      toast('설정 완료 — 사장으로 들어왔습니다');
+    }catch(err){toast(err&&err.error?err.error:'설정 실패 — 인터넷을 확인해 주세요');}
+    return;
+  }
   P={staff:s,owner:o};localStorage.setItem(K.P,JSON.stringify(P));
   unlock('owner');toast('설정 완료 — 사장으로 들어왔습니다');
 };
-$('#pin').oninput=e=>{
+$('#pin').oninput=async e=>{
   const v=e.target.value.replace(/\D/g,'');e.target.value=v;
   $('#pin-err').classList.add('hide');
-  if(v.length===4){
-    if(v===P.owner)unlock('owner');
-    else if(v===P.staff)unlock('staff');
-    else{e.target.value='';$('#pin-err').classList.remove('hide');}
+  if(v.length!==4)return;
+  if(MODE==='server'){
+    e.target.disabled=true;
+    try{
+      const d=await api({action:'load',pin:v});
+      SPIN=v;sessionStorage.setItem(K.PIN,v);
+      adopt(d);unlock(d.role);startPoll();setSync('ok');
+    }catch(err){
+      e.target.value='';
+      $('#pin-err').textContent=err&&err.error?err.error:'PIN이 맞지 않습니다';
+      $('#pin-err').classList.remove('hide');
+    }finally{e.target.disabled=false;if(!role)e.target.focus();}
+    return;
   }
+  if(v===P.owner)unlock('owner');
+  else if(v===P.staff)unlock('staff');
+  else{e.target.value='';$('#pin-err').classList.remove('hide');}
 };
-$('#pin-save').onclick=()=>{
+$('#pin-save').onclick=async()=>{
   const s=$('#np-staff').value.trim(),o=$('#np-owner').value.trim();
   if(!/^\d{4}$/.test(s)||!/^\d{4}$/.test(o))return toast('PIN은 숫자 4자리로 적어주세요');
   if(s===o)return toast('직원 PIN과 사장 PIN은 달라야 합니다');
+  if(MODE==='server'){
+    try{
+      await api({action:'setpins',pin:SPIN,pins:{staff:s,owner:o}});
+      SPIN=o;sessionStorage.setItem(K.PIN,o);
+      $('#np-staff').value='';$('#np-owner').value='';
+      toast('PIN을 바꿨습니다');
+    }catch(err){toast(err&&err.error?err.error:'PIN 변경 실패');}
+    return;
+  }
   P={staff:s,owner:o};localStorage.setItem(K.P,JSON.stringify(P));
   $('#np-staff').value='';$('#np-owner').value='';
   toast('PIN을 바꿨습니다');
@@ -461,11 +558,12 @@ $('#save').onclick=()=>{
     memo:$('#f-memo').value.trim(),
     c1:$('#f-c1').checked,c2:$('#f-c2').checked,c3:$('#f-c3').checked,
     done:prev?(prev.done||0):0,
-    created:prev?(prev.created||today()):today()
+    created:prev?(prev.created||today()):today(),
+    u:Date.now()
   };
   pushHist(editing?name+' 수정':name+' 등록');
   if(editing){C=C.map(g=>g.id===editing?rec:g);}
-  else{C.push(rec);E.push({t:'new',d:today(),id:rec.id});}
+  else{C.push(rec);E.push({t:'new',d:today(),id:rec.id,k:Math.random().toString(36).slice(2,8)});}
   persist();
   const wasEdit=!!editing;
   resetForm();render();
@@ -480,7 +578,8 @@ document.addEventListener('click',e=>{
 
   if(act==='stamp'){
     pushHist(g.name+' 도장 +1');
-    g.stamp++;g.visit=today();E.push({t:'re',d:today(),id});
+    g.stamp++;g.visit=today();g.u=Date.now();
+    E.push({t:'re',d:today(),id,k:Math.random().toString(36).slice(2,8)});
     const fromRe=!!b.closest('#p-re');
     if(fromRe)$('#q').value='';   /* 다음 손님 바로 검색할 수 있게 비움 */
     persist();render();
@@ -491,7 +590,7 @@ document.addEventListener('click',e=>{
     if(g.stamp<5)return;
     if(!confirm(`${g.name} 님 무료 1잔을 사용 처리할까요?\n도장이 0개로 돌아가고 완주 기록에 1이 쌓입니다.`))return;
     pushHist(g.name+' 무료 1잔');
-    g.stamp=0;g.done=(g.done||0)+1;
+    g.stamp=0;g.done=(g.done||0)+1;g.u=Date.now();
     persist();render();
     toast(`${g.name} 님 무료 1잔 사용 — 누적 ${g.done}번째 완주 🥂`,true);
   }
@@ -508,7 +607,8 @@ document.addEventListener('click',e=>{
     if(!confirm(`${g.name} 님을 장부에서 지울까요?`))return;
     if(!confirm(`정말 지울까요? 도장 ${g.stamp}개, 완주 ${g.done||0}회 기록도 함께 사라집니다.`))return;
     pushHist(g.name+' 삭제');
-    C=C.filter(x=>x.id!==id);persist();render();toast(g.name+' 님을 지웠습니다',true);
+    C=C.filter(x=>x.id!==id);D.push({id,at:Date.now()});
+    persist();render();toast(g.name+' 님을 지웠습니다',true);
   }
   if(act==='copy'){
     if(navigator.clipboard)navigator.clipboard.writeText(g.tel);
@@ -679,6 +779,10 @@ $('#file').onchange=e=>{
         done:+g.done||0,created:g.created||g.visit||today()}));
       if(!confirm(`손님 ${list.length}명을 불러옵니다. 지금 장부는 덮어씁니다.`))return;
       pushHist('백업 복원');
+      const now=Date.now();
+      list.forEach(g=>g.u=now);
+      const keep=new Set(list.map(g=>g.id));
+      C.filter(g=>!keep.has(g.id)).forEach(g=>D.push({id:g.id,at:now-1}));
       C=list;E=ev;persist();render();toast('불러왔습니다',true);
     }catch(err){toast('백업 파일이 아닙니다');}
   };
@@ -688,13 +792,43 @@ $('#wipe').onclick=()=>{
   if(!confirm('손님 정보를 전부 지웁니다. 되돌릴 수 없습니다.'))return;
   if(!confirm('정말 지울까요? 백업부터 받아두시는 걸 권합니다.'))return;
   pushHist('전부 지우기');
+  const now=Date.now();
+  C.forEach(g=>D.push({id:g.id,at:now}));
   C=[];E=[];persist();render();toast('모두 지웠습니다',true);
 };
 
-/* ─── 시작 ─── */
-loadAll();
-role=sessionStorage.getItem(K.R);
-if(role&&P){showApp();}
-else if(!P){$('#setup').classList.remove('hide');}
-else{$('#enter').classList.remove('hide');setTimeout(()=>$('#pin').focus(),100);}
+/* ─── 시작 ───
+   서버(공유 저장소)가 연결되어 있으면 모든 기기가 한 장부를 씁니다.
+   연결이 없거나 파일로 직접 열었으면 이 기기 전용(로컬)으로 동작합니다. */
+(async function boot(){
+  loadAll();
+  let probe=null;
+  try{
+    const r=await fetch('/api/guestbook',{cache:'no-store'});
+    if(r.ok)probe=await r.json();
+  }catch(e){}
+
+  if(probe&&probe.configured){
+    MODE='server';
+    SPIN=sessionStorage.getItem(K.PIN);
+    const savedRole=sessionStorage.getItem(K.R);
+    if(SPIN&&savedRole){
+      try{
+        const d=await api({action:'load',pin:SPIN});
+        adopt(d);role=d.role;sessionStorage.setItem(K.R,role);
+        showApp();startPoll();
+        return;
+      }catch(e){SPIN=null;sessionStorage.removeItem(K.PIN);sessionStorage.removeItem(K.R);}
+    }
+    if(!probe.hasPins){$('#setup').classList.remove('hide');}
+    else{$('#enter').classList.remove('hide');setTimeout(()=>$('#pin').focus(),100);}
+    return;
+  }
+
+  MODE='local';
+  role=sessionStorage.getItem(K.R);
+  if(role&&P){showApp();setSync();}
+  else if(!P){$('#setup').classList.remove('hide');}
+  else{$('#enter').classList.remove('hide');setTimeout(()=>$('#pin').focus(),100);}
+})();
 </script>

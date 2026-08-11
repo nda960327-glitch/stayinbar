@@ -12,3 +12,5 @@ data/logs.json
 
 # 손님 장부 (개인정보 — 커밋 안 함)
 data/customers.json
+data/guestbook.json
+data/.probe

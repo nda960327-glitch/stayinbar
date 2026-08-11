@@ -27,6 +27,7 @@ export default function OwnerDashboard() {
 
   const [openEmp, setOpenEmp] = useState<string | null>(null);
   const [showMaterial, setShowMaterial] = useState(false);
+  const [showDaily, setShowDaily] = useState(false);
 
   const load = useCallback(async (m?: string) => {
     setLoading(true);
@@ -111,6 +112,12 @@ export default function OwnerDashboard() {
   const availableMonths = data.availableMonths ?? [];
   const hasData = data.workingDays > 0;
 
+  const dailySales = data.dailySales ?? [];
+  const maxDaily = dailySales.reduce((m, d) => Math.max(m, d.revenue), 0);
+  const avgDaily = dailySales.length > 0 ? Math.round(o.totalSales / dailySales.length) : 0;
+  const dayTarget = o.workingDays > 0 ? Math.round(o.targetSales / o.workingDays) : 0;
+  const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
   return (
     <>
       {/* 월 선택 + 데이터 소스 */}
@@ -153,10 +160,15 @@ export default function OwnerDashboard() {
         <>
           {/* 핵심 지표 */}
           <div className="grid cols-4">
-            <div className="stat">
-              <div className="label">월 총매출</div>
+            <div
+              className="stat"
+              onClick={() => setShowDaily(!showDaily)}
+              style={{ cursor: "pointer" }}
+              title="누르면 일일 매출이 열립니다"
+            >
+              <div className="label">월 총매출 {showDaily ? "▲" : "▼"}</div>
               <div className="value accent">{wonShort(o.totalSales)}원</div>
-              <div className="foot">{won(o.totalSales)}</div>
+              <div className="foot">{won(o.totalSales)} · 누르면 일일 매출</div>
             </div>
             <div className="stat">
               <div className="label">목표 달성률</div>
@@ -178,6 +190,73 @@ export default function OwnerDashboard() {
               <div className="foot">{won(o.netProfit)}</div>
             </div>
           </div>
+
+          {/* 일일 매출 (월 총매출 타일 클릭 시) */}
+          {showDaily && (
+            <div className="card mt">
+              <h2>
+                일일 매출{" "}
+                <span className="sub">
+                  평균 {wonShort(avgDaily)}원 · 최고 {wonShort(maxDaily)}원 · 1일 목표 {wonShort(dayTarget)}원
+                </span>
+              </h2>
+              <div style={{ overflowX: "auto" }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>날짜</th>
+                      <th style={{ textAlign: "right" }}>매출</th>
+                      <th style={{ width: "40%" }}></th>
+                      <th style={{ textAlign: "right" }}>목표 대비</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dailySales.map((d) => {
+                      const day = new Date(d.date + "T00:00:00").getDay();
+                      const rate = dayTarget > 0 ? (d.revenue / dayTarget) * 100 : 0;
+                      return (
+                        <tr key={d.date}>
+                          <td style={{ whiteSpace: "nowrap" }}>
+                            {d.date.slice(5).replace("-", "/")}{" "}
+                            <span
+                              style={{
+                                color: day === 0 ? "var(--red)" : day === 6 ? "var(--blue)" : "var(--muted)",
+                              }}
+                            >
+                              ({WEEKDAYS[day]})
+                            </span>
+                          </td>
+                          <td style={{ textAlign: "right", fontWeight: 600 }}>{won(d.revenue)}</td>
+                          <td>
+                            <div
+                              style={{
+                                height: 8,
+                                borderRadius: 4,
+                                background: rate >= 100 ? "var(--green)" : "var(--accent)",
+                                width: `${maxDaily > 0 ? Math.max((d.revenue / maxDaily) * 100, 2) : 0}%`,
+                              }}
+                            />
+                          </td>
+                          <td
+                            style={{ textAlign: "right" }}
+                            className={rate >= 100 ? "" : "muted"}
+                          >
+                            <span style={{ color: rate >= 100 ? "var(--green)" : undefined }}>{pct(rate)}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="total">
+                      <td>합계 ({o.workingDays}일)</td>
+                      <td style={{ textAlign: "right" }}>{won(o.totalSales)}</td>
+                      <td></td>
+                      <td style={{ textAlign: "right" }}>{pct(o.targetAchievement)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* 손익 계산서 */}
           <div className="card mt">

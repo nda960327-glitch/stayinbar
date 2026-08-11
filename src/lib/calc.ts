@@ -138,6 +138,9 @@ export function computeMonthly(
   }
   const totalSales = Array.from(dailyMax.values()).reduce((a, b) => a + b, 0);
   const workingDays = dailyMax.size;
+  const dailySales = Array.from(dailyMax.entries())
+    .map(([date, revenue]) => ({ date, revenue }))
+    .sort((a, b) => b.date.localeCompare(a.date));
   const targetSales = workingDays * config.dailyTarget;
   
   // 시트에서 합산한 해당 월의 총 재료비+주류비
@@ -300,5 +303,6 @@ export function computeMonthly(
     unmatchedNames: Array.from(unmatched),
     materialCost: sheetMaterialCost,
     materialCostDetails,
+    dailySales,
   };
 }

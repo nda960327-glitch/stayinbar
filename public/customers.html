@@ -1,0 +1,700 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STAY IN · 단골 장부</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap');
+
+  :root{
+    --ink:#0f1512;
+    --moss:#16241d;
+    --moss-2:#1d2f26;
+    --line:#2c4438;
+    --brass:#c9a227;
+    --brass-dim:#8f7420;
+    --leaf:#7fa88c;
+    --paper:#e8e4d9;
+    --paper-dim:#9aa79f;
+    --alert:#d97a5c;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--ink);color:var(--paper);
+    font-family:'IBM Plex Sans KR',system-ui,sans-serif;font-weight:300;font-size:16px;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:18px 14px 90px}
+  .hide{display:none !important}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+  .eyebrow{font-size:11px;letter-spacing:.28em;color:var(--brass);text-transform:uppercase}
+  h1{font-family:'Gowun Batang',serif;font-weight:700;font-size:26px;margin:6px 0 0;letter-spacing:-.01em}
+  .who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--paper-dim)}
+  .rolepill{border:1px solid var(--brass);color:var(--brass);border-radius:999px;padding:3px 12px;font-size:12px}
+
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 16px}
+  .tab{
+    background:none;border:1px solid var(--line);color:var(--paper-dim);
+    padding:11px 15px;border-radius:3px;font:inherit;font-size:14px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;
+  }
+  .tab[aria-selected="true"]{background:var(--moss-2);border-color:var(--brass);color:var(--paper)}
+  .tab .n{font-size:11px;background:var(--brass);color:var(--ink);border-radius:999px;padding:1px 7px;font-weight:600}
+
+  .card{background:var(--moss);border:1px solid var(--line);border-radius:4px;padding:18px;margin-bottom:14px}
+  .card h2{font-family:'Gowun Batang',serif;font-size:18px;margin:0 0 12px;font-weight:700}
+  .card .desc{font-size:13px;color:var(--paper-dim);margin:-6px 0 14px;line-height:1.6}
+
+  label{display:block;font-size:11px;letter-spacing:.1em;color:var(--leaf);margin-bottom:5px;text-transform:uppercase}
+  input,select{
+    width:100%;background:var(--ink);border:1px solid var(--line);color:var(--paper);
+    padding:12px;border-radius:3px;font:inherit;font-size:16px;
+  }
+  input:focus,select:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+
+  .btn{
+    background:var(--brass);color:var(--ink);border:none;padding:13px 20px;border-radius:3px;
+    font:inherit;font-weight:600;font-size:16px;cursor:pointer;min-height:48px;
+  }
+  .btn:active{filter:brightness(1.1)}
+  .btn.ghost{background:none;color:var(--paper);border:1px solid var(--line);font-weight:400}
+  .btn.sm{padding:8px 13px;font-size:13px;min-height:0}
+  .btn.danger{background:none;border:1px solid var(--alert);color:var(--alert)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+
+  .search{font-size:18px;padding:15px 14px;border-color:var(--brass-dim)}
+
+  /* 손님 카드(재방문/보상) */
+  .guest{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:14px 12px;border-bottom:1px solid rgba(44,68,56,.6);
+  }
+  .guest:last-child{border-bottom:none}
+  .g-name{font-family:'Gowun Batang',serif;font-size:18px;font-weight:700}
+  .g-sub{font-size:13px;color:var(--paper-dim);margin-top:3px;line-height:1.5}
+  .g-stamp{font-size:14px;margin-top:5px;color:var(--brass);letter-spacing:.12em}
+  .g-stamp small{color:var(--paper-dim);letter-spacing:0;margin-left:6px}
+  .g-act{display:flex;flex-direction:column;gap:8px;align-items:stretch;flex-shrink:0}
+  .badge{
+    display:inline-block;background:var(--brass);color:var(--ink);border-radius:999px;
+    font-size:11px;font-weight:600;padding:2px 9px;margin-left:7px;vertical-align:middle;
+  }
+  .warn{color:var(--alert)}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-size:10px;letter-spacing:.14em;color:var(--leaf);text-transform:uppercase;font-weight:400;padding:0 8px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:11px 8px;border-bottom:1px solid rgba(44,68,56,.5);vertical-align:middle}
+  .tel{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--paper-dim);margin-right:3px}
+  .pill.ok{border-color:var(--leaf);color:var(--leaf)}
+  .pill.no{border-color:var(--alert);color:var(--alert)}
+
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+  .stat > div{background:var(--ink);border:1px solid var(--line);border-radius:3px;padding:12px 14px;font-size:12px;color:var(--paper-dim)}
+  .stat b{display:block;font-family:'Gowun Batang',serif;font-size:24px;color:var(--paper);font-weight:700;margin-bottom:2px}
+  .stat b.accent{color:var(--brass)}
+
+  .empty{text-align:center;padding:38px 16px;color:var(--paper-dim);font-size:14px;line-height:1.8}
+  .empty strong{display:block;font-family:'Gowun Batang',serif;font-size:17px;color:var(--paper);margin-bottom:6px;font-weight:700}
+
+  .checks{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 4px;padding:12px;background:var(--ink);border:1px dashed var(--line);border-radius:3px}
+  .checks label{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--paper);margin:0;cursor:pointer}
+  .checks input{width:auto;min-height:20px;min-width:20px}
+  .legal{font-size:12px;color:var(--paper-dim);margin-top:10px;line-height:1.6}
+
+  /* 잠금 화면 */
+  .lockwrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .lockcard{width:100%;max-width:360px;text-align:center}
+  .lockcard h1{margin-bottom:6px}
+  .lockcard .sub{font-size:13px;color:var(--paper-dim);margin-bottom:26px}
+  .pinbox{
+    font-size:32px;text-align:center;letter-spacing:.5em;padding:14px;
+    font-family:'Gowun Batang',serif;
+  }
+  .lockcard label{text-align:left;margin-top:14px}
+
+  .undo-fab{
+    position:fixed;right:12px;bottom:22px;z-index:98;
+    background:var(--moss-2);border:1px solid var(--brass);color:var(--brass);
+    border-radius:999px;padding:12px 18px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;
+    box-shadow:0 4px 18px rgba(0,0,0,.5);max-width:72vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .toast{
+    position:fixed;left:50%;bottom:86px;transform:translateX(-50%);
+    background:var(--brass);color:var(--ink);padding:12px 18px;border-radius:3px;
+    font-size:15px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:99;
+    display:flex;gap:12px;align-items:center;max-width:92vw;
+  }
+  .toast.on{opacity:1;pointer-events:auto}
+  .toast button{
+    background:var(--ink);color:var(--brass);border:none;border-radius:3px;
+    padding:7px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;
+  }
+  @media (max-width:560px){
+    .guest{flex-direction:row}
+    .g-act .btn{padding:12px 14px;font-size:15px}
+    h1{font-size:23px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+
+<!-- ══════════ 잠금 화면 ══════════ -->
+<div id="lock" class="lockwrap">
+  <div class="lockcard">
+    <div class="eyebrow">Stay in · 비밀의 정원</div>
+    <h1>단골 장부</h1>
+    <div class="sub">직원용 · 사장용 PIN으로 들어옵니다</div>
+
+    <div id="setup" class="hide">
+      <div class="card" style="text-align:left">
+        <h2>처음 설정</h2>
+        <p class="desc">두 PIN을 정해주세요. 직원 PIN으로는 등록과 도장만, 사장 PIN으로는 전부 할 수 있습니다.</p>
+        <label>직원 PIN (숫자 4자리)</label>
+        <input id="su-staff" inputmode="numeric" maxlength="4" placeholder="예: 1111">
+        <label>사장 PIN (숫자 4자리)</label>
+        <input id="su-owner" inputmode="numeric" maxlength="4" placeholder="예: 9999">
+        <div class="row"><button class="btn" id="su-save" style="width:100%">장부 시작하기</button></div>
+      </div>
+    </div>
+
+    <div id="enter" class="hide">
+      <input id="pin" class="pinbox" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+      <div id="pin-err" class="warn hide" style="margin-top:12px;font-size:14px">PIN이 맞지 않습니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ 앱 본체 ══════════ -->
+<div id="app" class="wrap hide">
+  <header>
+    <div>
+      <div class="eyebrow">Stay in · 비밀의 정원</div>
+      <h1>단골 장부</h1>
+    </div>
+    <div class="who">
+      <span class="rolepill" id="role-pill"></span>
+      <button class="btn ghost sm" id="logout">잠그기</button>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" data-tab="re" aria-selected="true">재방문</button>
+    <button class="tab" data-tab="add" aria-selected="false">신규 등록</button>
+    <button class="tab" data-tab="reward" aria-selected="false">보상 <span class="n hide" id="n-reward">0</span></button>
+    <button class="tab owner-only" data-tab="roster" aria-selected="false">명단 <span class="n" id="n-roster">0</span></button>
+    <button class="tab owner-only" data-tab="send" aria-selected="false">발송 명단</button>
+    <button class="tab owner-only" data-tab="stats" aria-selected="false">통계</button>
+    <button class="tab owner-only" data-tab="data" aria-selected="false">백업 · 설정</button>
+  </div>
+
+  <!-- 재방문 -->
+  <section id="p-re">
+    <div class="card">
+      <input id="q" class="search" placeholder="이름 · 별명 · 전화 뒷4자리" autocomplete="off">
+      <div class="legal" style="margin-top:8px">한 명만 남으면 Enter(확인) 키가 곧 [도장 +1]입니다. 도장을 찍으면 검색창이 비워집니다. 잘못 눌렀다면 오른쪽 아래 <b>↩ 취소</b> 버튼.</div>
+      <div id="re-list"></div>
+    </div>
+  </section>
+
+  <!-- 신규 등록 -->
+  <section id="p-add" class="hide">
+    <div class="card">
+      <h2 id="add-title">종이 카드 옮겨 적기</h2>
+      <div class="grid">
+        <div><label for="f-name">이름 (별명 가능)</label><input id="f-name" placeholder="김도아"></div>
+        <div><label for="f-tel">휴대폰 11자리</label><input id="f-tel" inputmode="numeric" maxlength="11" placeholder="01012345678"></div>
+        <div><label for="f-co">회사 · 팀</label><input id="f-co" placeholder="한빛물산 마케팅팀"></div>
+        <div>
+          <label for="f-bm">생일</label>
+          <div style="display:flex;gap:8px">
+            <select id="f-bm"><option value="">월</option></select>
+            <select id="f-bd"><option value="">일</option></select>
+          </div>
+        </div>
+        <div><label for="f-stamp">현재 도장</label><input id="f-stamp" type="number" min="0" value="1"></div>
+      </div>
+      <div style="margin-top:12px"><label for="f-memo">메모 (외모 · 취향)</label><input id="f-memo" placeholder="안경 / 위스키 하이볼 / 총무"></div>
+
+      <div class="checks">
+        <label><input type="checkbox" id="f-c1" checked> 개인정보 수집·이용 동의</label>
+        <label><input type="checkbox" id="f-c2" checked> 광고 수신 동의</label>
+        <label><input type="checkbox" id="f-c3"> 야간(21~08시) 수신 동의</label>
+      </div>
+      <div class="legal">광고 문자는 <b>광고 수신 동의</b>한 손님에게만 보낼 수 있습니다. 동의 없는 손님은 발송 명단에서 자동으로 빠집니다.</div>
+
+      <div class="row">
+        <button class="btn" id="save" style="flex:1">장부에 올리기</button>
+        <button class="btn ghost" id="clear">비우기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 보상 -->
+  <section id="p-reward" class="hide">
+    <div class="card">
+      <h2>무료 1잔 대기</h2>
+      <p class="desc">도장 5개를 채운 손님입니다. 사용 처리하면 도장이 0개로 돌아가고 완주 기록에 1이 쌓입니다.</p>
+      <div id="reward-list"></div>
+    </div>
+    <div class="card">
+      <h2>완주 기록</h2>
+      <div id="done-list"></div>
+    </div>
+  </section>
+
+  <!-- 명단 (사장) -->
+  <section id="p-roster" class="hide">
+    <div class="card">
+      <div class="row" style="margin:0 0 14px">
+        <input id="q2" placeholder="이름 · 번호 · 회사로 찾기" style="flex:1;min-width:150px">
+        <select id="sort" style="width:auto">
+          <option value="recent">최근 방문순</option>
+          <option value="stamp">도장 많은순</option>
+          <option value="name">이름순</option>
+        </select>
+      </div>
+      <div id="roster" style="overflow-x:auto"></div>
+    </div>
+  </section>
+
+  <!-- 발송 명단 (사장) -->
+  <section id="p-send" class="hide">
+    <div class="card">
+      <h2>이번 달 생일자</h2>
+      <p class="desc" id="send-bday-desc"></p>
+      <div id="send-bday"></div>
+      <div class="row"><button class="btn" data-csv="bday">생일자 CSV 내려받기</button></div>
+    </div>
+    <div class="card">
+      <h2>발길 끊긴 단골 <small style="color:var(--paper-dim);font-weight:400">(21일 경과 · 도장 2개 이상)</small></h2>
+      <p class="desc" id="send-away-desc"></p>
+      <div id="send-away"></div>
+      <div class="row"><button class="btn" data-csv="away">미방문자 CSV 내려받기</button></div>
+    </div>
+    <div class="legal">CSV에는 광고 수신 동의한 손님만 담깁니다 (법적 요건). 엑셀에서 한글이 깨지지 않도록 저장됩니다. 솔라피·알리고 등에 바로 올리세요.</div>
+  </section>
+
+  <!-- 통계 (사장) -->
+  <section id="p-stats" class="hide">
+    <div class="card">
+      <h2 id="stats-title">이번 달 통계</h2>
+      <div class="stat" id="stat-tiles"></div>
+    </div>
+    <div class="card">
+      <h2>회사별 손님 수 <small style="color:var(--paper-dim);font-weight:400">회식 영업용</small></h2>
+      <div id="stat-co"></div>
+    </div>
+  </section>
+
+  <!-- 백업 · 설정 (사장) -->
+  <section id="p-data" class="hide">
+    <div class="card">
+      <h2>백업과 복원</h2>
+      <p class="desc">손님 정보는 이 기기 브라우저 안에만 저장됩니다. 기기를 바꾸거나 초기화하면 사라지니 한 달에 한 번은 백업해 두세요.</p>
+      <div class="row" style="margin-top:0">
+        <button class="btn ghost" id="backup">백업 파일 받기</button>
+        <button class="btn ghost" id="restore">백업 불러오기</button>
+        <button class="btn danger" id="wipe">전부 지우기</button>
+      </div>
+      <input type="file" id="file" accept=".json" class="hide">
+    </div>
+    <div class="card">
+      <h2>PIN 변경</h2>
+      <div class="grid">
+        <div><label>직원 PIN</label><input id="np-staff" inputmode="numeric" maxlength="4"></div>
+        <div><label>사장 PIN</label><input id="np-owner" inputmode="numeric" maxlength="4"></div>
+      </div>
+      <div class="row"><button class="btn ghost" id="pin-save">PIN 저장</button></div>
+    </div>
+  </section>
+</div>
+
+<button id="undo-fab" class="undo-fab hide"></button>
+<div class="toast" id="toast"><span id="toast-msg"></span><button id="toast-undo" class="hide">되돌리기</button></div>
+
+<script>
+const K={C:'stayin.crm.customers.v1',E:'stayin.crm.events.v1',P:'stayin.crm.pins.v1',R:'stayin.crm.role'};
+let C=[],E=[],P=null,role=null,editing=null,hist=[],toastTimer=null,reRows=[];
+
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const daysSince=d=>d?Math.floor((new Date(today())-new Date(d))/864e5):9999;
+const byId=id=>C.find(x=>x.id===id);
+const month=()=>new Date().getMonth()+1;
+
+/* ─── 저장 ─── */
+function loadAll(){
+  try{C=JSON.parse(localStorage.getItem(K.C)||'[]')}catch(e){C=[]}
+  try{E=JSON.parse(localStorage.getItem(K.E)||'[]')}catch(e){E=[]}
+  try{P=JSON.parse(localStorage.getItem(K.P)||'null')}catch(e){P=null}
+  /* 예전 손님 장부(stayin-guest-book) 데이터 자동 이어받기 */
+  if(!C.length){
+    try{
+      const old=JSON.parse(localStorage.getItem('stayin.guests.v1')||'[]');
+      if(Array.isArray(old)&&old.length){
+        C=old.map(g=>({id:g.id,name:g.name||'',tel:String(g.tel||''),co:g.co||'',bm:+g.bm||0,bd:+g.bd||0,
+          stamp:+g.stamp||0,visit:g.visit||'',memo:g.memo||'',c1:!!g.c1,c2:!!g.c2,c3:!!g.c3,done:0,created:g.visit||today()}));
+        persist();
+        setTimeout(()=>toast(`예전 장부에서 손님 ${C.length}명을 이어받았습니다`),600);
+      }
+    }catch(e){}
+  }
+}
+function persist(){
+  localStorage.setItem(K.C,JSON.stringify(C));
+  localStorage.setItem(K.E,JSON.stringify(E));
+}
+
+/* ─── 알림 · 되돌리기 ─── */
+function toast(msg,withUndo){
+  $('#toast-msg').textContent=msg;
+  $('#toast-undo').classList.toggle('hide',!withUndo);
+  $('#toast').classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>$('#toast').classList.remove('on'),withUndo?6000:2200);
+}
+/* 최근 20개 동작을 기억해 두고 차례로 되돌립니다 (도장·완주·삭제·등록·수정·복원·전부지우기) */
+function pushHist(label){
+  hist.push({label,C:JSON.parse(JSON.stringify(C)),E:JSON.parse(JSON.stringify(E))});
+  if(hist.length>20)hist.shift();
+  updateFab();
+}
+function updateFab(){
+  const f=$('#undo-fab');
+  if(hist.length){f.textContent='↩ 취소: '+hist[hist.length-1].label;f.classList.remove('hide');}
+  else f.classList.add('hide');
+}
+function undoLast(){
+  const h=hist.pop();if(!h)return;
+  C=h.C;E=h.E;persist();render();updateFab();
+  $('#toast').classList.remove('on');
+  setTimeout(()=>toast(`'${h.label}' 취소했습니다`),120);
+}
+$('#toast-undo').onclick=undoLast;
+$('#undo-fab').onclick=undoLast;
+
+/* ─── 잠금 · PIN ─── */
+function showApp(){
+  $('#lock').classList.add('hide');
+  $('#app').classList.remove('hide');
+  $('#role-pill').textContent=role==='owner'?'사장':'직원';
+  $$('.owner-only').forEach(el=>el.classList.toggle('hide',role!=='owner'));
+  render();
+  setTimeout(()=>$('#q').focus(),100);
+}
+function unlock(r){
+  role=r;sessionStorage.setItem(K.R,r);showApp();
+}
+$('#logout').onclick=()=>{sessionStorage.removeItem(K.R);location.reload();};
+
+$('#su-save').onclick=()=>{
+  const s=$('#su-staff').value.trim(),o=$('#su-owner').value.trim();
+  if(!/^\d{4}$/.test(s)||!/^\d{4}$/.test(o))return toast('PIN은 숫자 4자리로 정해주세요');
+  if(s===o)return toast('직원 PIN과 사장 PIN은 달라야 합니다');
+  P={staff:s,owner:o};localStorage.setItem(K.P,JSON.stringify(P));
+  unlock('owner');toast('설정 완료 — 사장으로 들어왔습니다');
+};
+$('#pin').oninput=e=>{
+  const v=e.target.value.replace(/\D/g,'');e.target.value=v;
+  $('#pin-err').classList.add('hide');
+  if(v.length===4){
+    if(v===P.owner)unlock('owner');
+    else if(v===P.staff)unlock('staff');
+    else{e.target.value='';$('#pin-err').classList.remove('hide');}
+  }
+};
+$('#pin-save').onclick=()=>{
+  const s=$('#np-staff').value.trim(),o=$('#np-owner').value.trim();
+  if(!/^\d{4}$/.test(s)||!/^\d{4}$/.test(o))return toast('PIN은 숫자 4자리로 적어주세요');
+  if(s===o)return toast('직원 PIN과 사장 PIN은 달라야 합니다');
+  P={staff:s,owner:o};localStorage.setItem(K.P,JSON.stringify(P));
+  $('#np-staff').value='';$('#np-owner').value='';
+  toast('PIN을 바꿨습니다');
+};
+
+/* ─── 탭 ─── */
+$$('.tab').forEach(b=>b.onclick=()=>{
+  $$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));
+  ['re','add','reward','roster','send','stats','data'].forEach(k=>$('#p-'+k).classList.toggle('hide',k!==b.dataset.tab));
+  render();
+  if(b.dataset.tab==='re')$('#q').focus();
+  if(b.dataset.tab==='add')$('#f-name').focus();
+});
+
+/* ─── 전화번호 표시: 직원은 뒷4자리만 ─── */
+function showTel(g){
+  const n=String(g.tel||'');
+  if(role==='owner')return n.length===11?`${n.slice(0,3)}-${n.slice(3,7)}-${n.slice(7)}`:n;
+  return '····'+n.slice(-4);
+}
+
+/* ─── 신규 등록 ─── */
+for(let m=1;m<=12;m++)$('#f-bm').add(new Option(m+'월',m));
+for(let d=1;d<=31;d++)$('#f-bd').add(new Option(d+'일',d));
+
+function resetForm(){
+  ['f-name','f-tel','f-co','f-memo'].forEach(i=>$('#'+i).value='');
+  $('#f-bm').value='';$('#f-bd').value='';$('#f-stamp').value=1;
+  $('#f-c1').checked=$('#f-c2').checked=true;$('#f-c3').checked=false;
+  editing=null;$('#add-title').textContent='종이 카드 옮겨 적기';$('#save').textContent='장부에 올리기';
+  $('#f-name').focus();
+}
+$('#clear').onclick=resetForm;
+
+$('#save').onclick=()=>{
+  const name=$('#f-name').value.trim(),t=$('#f-tel').value.replace(/\D/g,'');
+  if(!name){toast('이름을 적어주세요');$('#f-name').focus();return;}
+  if(t.length<10){toast('휴대폰 번호를 확인해 주세요 (11자리)');$('#f-tel').focus();return;}
+  const dup=C.find(g=>g.tel===t&&g.id!==editing);
+  if(dup&&!confirm(`${dup.name} 님이 같은 번호로 이미 있습니다. 그래도 새로 만들까요?`))return;
+
+  const prev=editing?byId(editing):null;
+  const rec={
+    id:editing||Date.now(),name,tel:t,
+    co:$('#f-co').value.trim(),
+    bm:+$('#f-bm').value||0,bd:+$('#f-bd').value||0,
+    stamp:+$('#f-stamp').value||0,
+    visit:prev?prev.visit:today(),
+    memo:$('#f-memo').value.trim(),
+    c1:$('#f-c1').checked,c2:$('#f-c2').checked,c3:$('#f-c3').checked,
+    done:prev?(prev.done||0):0,
+    created:prev?(prev.created||today()):today()
+  };
+  pushHist(editing?name+' 수정':name+' 등록');
+  if(editing){C=C.map(g=>g.id===editing?rec:g);}
+  else{C.push(rec);E.push({t:'new',d:today(),id:rec.id});}
+  persist();
+  const wasEdit=!!editing;
+  resetForm();render();
+  toast(wasEdit?name+' 님 고쳤습니다':name+' 님 올렸습니다',true);
+};
+
+/* ─── 도장 · 보상 · 수정 · 삭제 ─── */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const id=+b.dataset.id,g=byId(id);if(!g)return;
+  const act=b.dataset.act;
+
+  if(act==='stamp'){
+    pushHist(g.name+' 도장 +1');
+    g.stamp++;g.visit=today();E.push({t:'re',d:today(),id});
+    const fromRe=!!b.closest('#p-re');
+    if(fromRe)$('#q').value='';   /* 다음 손님 바로 검색할 수 있게 비움 */
+    persist();render();
+    if(fromRe)$('#q').focus();
+    toast(g.stamp>=5?`${g.name} 님 도장 ${g.stamp}개 — 무료 1잔 안내하세요 🍸`:`${g.name} 님 도장 ${g.stamp}개`,true);
+  }
+  if(act==='reward'){
+    if(g.stamp<5)return;
+    if(!confirm(`${g.name} 님 무료 1잔을 사용 처리할까요?\n도장이 0개로 돌아가고 완주 기록에 1이 쌓입니다.`))return;
+    pushHist(g.name+' 무료 1잔');
+    g.stamp=0;g.done=(g.done||0)+1;
+    persist();render();
+    toast(`${g.name} 님 무료 1잔 사용 — 누적 ${g.done}번째 완주 🥂`,true);
+  }
+  if(act==='edit'&&role==='owner'){
+    editing=id;
+    $('#f-name').value=g.name;$('#f-tel').value=g.tel;$('#f-co').value=g.co;
+    $('#f-bm').value=g.bm||'';$('#f-bd').value=g.bd||'';$('#f-stamp').value=g.stamp;
+    $('#f-memo').value=g.memo;
+    $('#f-c1').checked=g.c1;$('#f-c2').checked=g.c2;$('#f-c3').checked=!!g.c3;
+    $('#add-title').textContent=g.name+' 님 고쳐 쓰기';$('#save').textContent='고친 내용 저장';
+    document.querySelector('[data-tab="add"]').click();scrollTo(0,0);
+  }
+  if(act==='del'&&role==='owner'){
+    if(!confirm(`${g.name} 님을 장부에서 지울까요?`))return;
+    if(!confirm(`정말 지울까요? 도장 ${g.stamp}개, 완주 ${g.done||0}회 기록도 함께 사라집니다.`))return;
+    pushHist(g.name+' 삭제');
+    C=C.filter(x=>x.id!==id);persist();render();toast(g.name+' 님을 지웠습니다',true);
+  }
+  if(act==='copy'){
+    if(navigator.clipboard)navigator.clipboard.writeText(g.tel);
+    toast('번호 복사됨');
+  }
+});
+
+/* ─── 그리기 ─── */
+function stampDots(g){
+  const s=Math.min(g.stamp,5);
+  return '●'.repeat(s)+'○'.repeat(5-s);
+}
+function guestRow(g,ctx){
+  const canReward=g.stamp>=5;
+  return `<div class="guest">
+    <div>
+      <div class="g-name">${esc(g.name)}${canReward?'<span class="badge">무료 1잔!</span>':''}</div>
+      <div class="g-sub">${[g.co&&esc(g.co),showTel(g),g.memo&&esc(g.memo)].filter(Boolean).join(' · ')}</div>
+      <div class="g-stamp">${stampDots(g)}<small>${g.stamp}/5${g.done?` · 완주 ${g.done}회`:''} · ${g.visit?daysSince(g.visit)+'일 전':'기록 없음'}</small></div>
+    </div>
+    <div class="g-act">
+      ${ctx==='reward'
+        ?`<button class="btn" data-act="reward" data-id="${g.id}">무료 1잔 사용</button>`
+        :`<button class="btn" data-act="stamp" data-id="${g.id}">도장 +1</button>${canReward?`<button class="btn ghost sm" data-act="reward" data-id="${g.id}">1잔 사용</button>`:''}`}
+    </div>
+  </div>`;
+}
+
+function renderRe(){
+  const q=$('#q').value.trim().toLowerCase();
+  let rows=C.filter(g=>{
+    if(!q)return true;
+    const hay=[g.name,g.co,g.memo,String(g.tel).slice(-4),role==='owner'?g.tel:''].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+  rows.sort((a,b)=>daysSince(a.visit)-daysSince(b.visit));
+  reRows=rows;
+  const cut=rows.slice(0,30);
+  $('#re-list').innerHTML=cut.length
+    ?cut.map(g=>guestRow(g,'re')).join('')+(rows.length>30?`<div class="empty">${rows.length-30}명 더 있습니다 — 검색으로 좁혀주세요</div>`:'')
+    :`<div class="empty"><strong>${C.length?'찾는 손님이 없습니다':'아직 장부가 비어 있습니다'}</strong>${C.length?'이름·별명·전화 뒷4자리로 검색해 보세요.':'신규 등록 탭에서 종이 카드를 옮겨 적어 주세요.'}</div>`;
+}
+
+function renderReward(){
+  const pend=C.filter(g=>g.stamp>=5).sort((a,b)=>b.stamp-a.stamp);
+  $('#reward-list').innerHTML=pend.length
+    ?pend.map(g=>guestRow(g,'reward')).join('')
+    :'<div class="empty"><strong>지금 무료 1잔 대상이 없습니다</strong>도장 5개가 되면 여기에 뜹니다.</div>';
+  const done=C.filter(g=>(g.done||0)>0).sort((a,b)=>(b.done||0)-(a.done||0)).slice(0,20);
+  $('#done-list').innerHTML=done.length
+    ?done.map(g=>`<div class="guest"><div><div class="g-name">${esc(g.name)}</div><div class="g-sub">${g.co?esc(g.co)+' · ':''}${showTel(g)}</div></div><div class="g-stamp">완주 ${g.done}회</div></div>`).join('')
+    :'<div class="empty">아직 완주한 손님이 없습니다.</div>';
+  const n=$('#n-reward');n.textContent=pend.length;n.classList.toggle('hide',!pend.length);
+}
+
+function rosterTable(rows,mode){
+  if(!rows.length)return '<div class="empty"><strong>해당하는 손님이 없습니다</strong></div>';
+  return `<div style="overflow-x:auto"><table><thead><tr>
+    <th>손님</th><th>휴대폰</th><th>도장</th><th>${mode==='bday'?'생일':'최근 방문'}</th><th>동의</th>${mode==='roster'?'<th></th>':''}
+  </tr></thead><tbody>${rows.map(g=>{
+    const d=daysSince(g.visit);
+    return `<tr>
+      <td><div class="g-name" style="font-size:15px">${esc(g.name)}</div>${g.co?`<div class="g-sub">${esc(g.co)}</div>`:''}${g.memo?`<div class="g-sub">${esc(g.memo)}</div>`:''}</td>
+      <td class="tel">${showTel(g)}${role==='owner'?` <button class="btn ghost sm" data-act="copy" data-id="${g.id}">복사</button>`:''}</td>
+      <td style="color:var(--brass);font-weight:600">${g.stamp}${g.done?`<div class="g-sub">완주 ${g.done}</div>`:''}</td>
+      <td>${mode==='bday'?`<b>${g.bm}/${g.bd}</b>`:`${g.visit||'-'}<div class="g-sub ${d>=21?'warn':''}">${d>9000?'기록 없음':d+'일 전'}</div>`}</td>
+      <td>${g.c2?'<span class="pill ok">문자 가능</span>':'<span class="pill no">발송 불가</span>'}${g.c3?'<span class="pill">야간</span>':''}</td>
+      ${mode==='roster'?`<td style="white-space:nowrap;text-align:right">
+        <button class="btn sm" data-act="stamp" data-id="${g.id}">도장 +1</button>
+        <button class="btn ghost sm" data-act="edit" data-id="${g.id}">수정</button>
+        <button class="btn ghost sm" data-act="del" data-id="${g.id}">삭제</button>
+      </td>`:''}
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function renderRoster(){
+  if(role!=='owner')return;
+  const q=$('#q2').value.trim().toLowerCase(),s=$('#sort').value;
+  let rows=C.filter(g=>!q||[g.name,g.tel,g.co,g.memo].join(' ').toLowerCase().includes(q));
+  rows.sort((a,b)=>s==='name'?a.name.localeCompare(b.name,'ko'):s==='stamp'?b.stamp-a.stamp:daysSince(a.visit)-daysSince(b.visit));
+  $('#roster').innerHTML=rosterTable(rows,'roster');
+  $('#n-roster').textContent=C.length;
+}
+
+const bdayList=()=>C.filter(g=>g.bm===month()).sort((a,b)=>a.bd-b.bd);
+const awayList=()=>C.filter(g=>daysSince(g.visit)>=21&&g.stamp>=2).sort((a,b)=>daysSince(b.visit)-daysSince(a.visit));
+
+function renderSend(){
+  if(role!=='owner')return;
+  const b=bdayList(),a=awayList();
+  const bOk=b.filter(g=>g.c2).length,aOk=a.filter(g=>g.c2).length;
+  $('#send-bday-desc').textContent=`${month()}월 생일 ${b.length}명 · 문자 가능 ${bOk}명${b.length-bOk?` (동의 없어 제외 ${b.length-bOk}명)`:''}`;
+  $('#send-away-desc').textContent=`대상 ${a.length}명 · 문자 가능 ${aOk}명${a.length-aOk?` (동의 없어 제외 ${a.length-aOk}명)`:''}`;
+  $('#send-bday').innerHTML=rosterTable(b,'bday');
+  $('#send-away').innerHTML=rosterTable(a,'away');
+}
+
+function renderStats(){
+  if(role!=='owner')return;
+  const ym=today().slice(0,7);
+  const nNew=E.filter(e=>e.t==='new'&&String(e.d).startsWith(ym)).length;
+  const nRe=E.filter(e=>e.t==='re'&&String(e.d).startsWith(ym)).length;
+  const rate=nNew+nRe?Math.round(nRe/(nNew+nRe)*100):0;
+  $('#stats-title').textContent=`${month()}월 통계`;
+  $('#stat-tiles').innerHTML=`
+    <div><b>${nNew}</b>신규 등록</div>
+    <div><b>${nRe}</b>재방문(도장)</div>
+    <div><b class="accent">${rate}%</b>재방문율</div>
+    <div><b>${C.length}</b>전체 단골</div>`;
+  const map={};
+  C.forEach(g=>{const co=(g.co||'').trim();if(co)map[co]=(map[co]||0)+1;});
+  const cos=Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  $('#stat-co').innerHTML=cos.length
+    ?`<table><thead><tr><th>회사 · 팀</th><th>손님 수</th></tr></thead><tbody>${cos.map(([co,n])=>`<tr><td>${esc(co)}</td><td style="color:var(--brass);font-weight:600">${n}명</td></tr>`).join('')}</tbody></table>`
+    :'<div class="empty">회사 정보가 적힌 손님이 아직 없습니다.</div>';
+}
+
+function render(){
+  renderRe();renderReward();renderRoster();renderSend();renderStats();
+}
+$('#q').oninput=renderRe;
+/* 한 명만 남았으면 Enter(확인) = 도장 +1 */
+$('#q').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&reRows.length===1){
+    const btn=document.querySelector('#re-list [data-act="stamp"]');
+    if(btn)btn.click();
+  }
+});
+$('#q2').oninput=renderRoster;
+$('#sort').onchange=renderRoster;
+
+/* ─── CSV · 백업 ─── */
+function dl(name,text,csv){
+  const b=new Blob([csv?'﻿'+text:text],{type:(csv?'text/csv':'application/json')+';charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+$$('[data-csv]').forEach(b=>b.onclick=()=>{
+  const k=b.dataset.csv;
+  const src=(k==='bday'?bdayList():awayList()).filter(g=>g.c2);
+  if(!src.length)return toast('내보낼 손님이 없습니다');
+  const csv=['이름,휴대폰,회사,생일,도장,최근방문',...src.map(g=>
+    [g.name,g.tel,g.co,g.bm?`${g.bm}/${g.bd}`:'',g.stamp,g.visit].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')
+  )].join('\n');
+  dl(`stayin_${k}_${today()}.csv`,csv,true);
+  toast(src.length+'명 내보냈습니다');
+});
+
+$('#backup').onclick=()=>{
+  if(!C.length)return toast('백업할 내용이 없습니다');
+  dl(`stayin_backup_${today()}.json`,JSON.stringify({v:2,exported:today(),customers:C,events:E}),false);
+  toast('백업 받았습니다');
+};
+$('#restore').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      let list,ev=[];
+      if(Array.isArray(d)){list=d;}                    // 예전 백업 형식
+      else if(d&&Array.isArray(d.customers)){list=d.customers;ev=Array.isArray(d.events)?d.events:[];}
+      else throw 0;
+      list=list.map(g=>({id:g.id,name:g.name||'',tel:String(g.tel||''),co:g.co||'',bm:+g.bm||0,bd:+g.bd||0,
+        stamp:+g.stamp||0,visit:g.visit||'',memo:g.memo||'',c1:!!g.c1,c2:!!g.c2,c3:!!g.c3,
+        done:+g.done||0,created:g.created||g.visit||today()}));
+      if(!confirm(`손님 ${list.length}명을 불러옵니다. 지금 장부는 덮어씁니다.`))return;
+      pushHist('백업 복원');
+      C=list;E=ev;persist();render();toast('불러왔습니다',true);
+    }catch(err){toast('백업 파일이 아닙니다');}
+  };
+  r.readAsText(f);e.target.value='';
+};
+$('#wipe').onclick=()=>{
+  if(!confirm('손님 정보를 전부 지웁니다. 되돌릴 수 없습니다.'))return;
+  if(!confirm('정말 지울까요? 백업부터 받아두시는 걸 권합니다.'))return;
+  pushHist('전부 지우기');
+  C=[];E=[];persist();render();toast('모두 지웠습니다',true);
+};
+
+/* ─── 시작 ─── */
+loadAll();
+role=sessionStorage.getItem(K.R);
+if(role&&P){showApp();}
+else if(!P){$('#setup').classList.remove('hide');}
+else{$('#enter').classList.remove('hide');setTimeout(()=>$('#pin').focus(),100);}
+</script>

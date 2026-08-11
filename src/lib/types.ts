@@ -128,6 +128,11 @@ export interface OwnerPnL {
   netProfit: number;
 }
 
+export interface DailySale {
+  date: string; // YYYY-MM-DD
+  revenue: number; // 그날 최종 매출 (날짜별 최댓값)
+}
+
 export interface MaterialDetailItem {
   date: string;
   item: string;    // 품목/구매내역 (뭐 샀는지)
@@ -147,5 +152,6 @@ export interface MonthlyResult {
   unmatchedNames: string[]; // 시트에 있으나 직원 등록 안 된 이름
   materialCost: number; // 해당 월의 스프레드시트에서 합산한 재료비+주류비
   materialCostDetails: MaterialDetailItem[];
+  dailySales: DailySale[]; // 날짜별 매출 (최근 날짜부터)
 }
 

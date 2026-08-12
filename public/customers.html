@@ -238,6 +238,10 @@
         <div><label for="f-stamp">현재 도장</label><input id="f-stamp" type="number" min="0" value="1"></div>
       </div>
       <div style="margin-top:12px"><label for="f-memo">메모 (외모 · 취향)</label><input id="f-memo" placeholder="안경 / 위스키 하이볼 / 총무"></div>
+      <div style="margin-top:12px">
+        <label for="f-note">지금 바로 적을 특성 (선택)</label>
+        <textarea id="f-note" maxlength="500" placeholder="기억날 때 지금 적어두세요 — 적은 사람 이름과 시각이 함께 남습니다"></textarea>
+      </div>
 
       <div class="checks">
         <label><input type="checkbox" id="f-c1" checked> 개인정보 수집·이용 동의</label>
@@ -426,6 +430,13 @@ async function doPush(){
     setSync('ok');
   }catch(e){setSync('err');}
   finally{pushing=false;}
+}
+/* 미뤄둔 저장을 지금 끝냅니다 (등록하자마자 특성을 붙일 때 씁니다) */
+async function flushPush(){
+  if(MODE!=='server'||!SPIN)return;
+  clearTimeout(pushTimer);pushTimer=null;
+  while(pushing)await new Promise(r=>setTimeout(r,80));
+  await doPush();
 }
 async function refreshFromServer(){
   if(MODE!=='server'||!SPIN||pushing)return;
@@ -655,7 +666,7 @@ for(let m=1;m<=12;m++)$('#f-bm').add(new Option(m+'월',m));
 for(let d=1;d<=31;d++)$('#f-bd').add(new Option(d+'일',d));
 
 function resetForm(){
-  ['f-name','f-tel','f-co','f-memo'].forEach(i=>$('#'+i).value='');
+  ['f-name','f-tel','f-co','f-memo','f-note'].forEach(i=>$('#'+i).value='');
   $('#f-bm').value='';$('#f-bd').value='';$('#f-stamp').value=1;
   $('#f-c1').checked=$('#f-c2').checked=true;$('#f-c3').checked=false;
   editing=null;$('#add-title').textContent='종이 카드 옮겨 적기';$('#save').textContent='장부에 올리기';
@@ -663,8 +674,9 @@ function resetForm(){
 }
 $('#clear').onclick=resetForm;
 
-$('#save').onclick=()=>{
+$('#save').onclick=async()=>{
   const name=$('#f-name').value.trim(),t=$('#f-tel').value.replace(/\D/g,'');
+  const noteText=$('#f-note').value.trim();
   if(!name){toast('이름을 적어주세요');$('#f-name').focus();return;}
   if(t.length<10){toast('휴대폰 번호를 확인해 주세요 (11자리)');$('#f-tel').focus();return;}
   const dup=C.find(g=>g.tel===t&&g.id!==editing);
@@ -691,7 +703,17 @@ $('#save').onclick=()=>{
   persist();
   const wasEdit=!!editing;
   resetForm();render();
-  toast(wasEdit?name+' 님 고쳤습니다':name+' 님 올렸습니다',true);
+  const savedMsg=wasEdit?name+' 님 고쳤습니다':name+' 님 올렸습니다';
+  if(!noteText)return toast(savedMsg,'undo');
+  if(!canWriteNote())return toast('올렸습니다 — 특성은 내 이름으로 들어와야 남길 수 있습니다');
+  try{
+    await flushPush();                 /* 서버에 손님이 먼저 올라가야 기록을 붙일 수 있습니다 */
+    await addNote(rec.id,noteText);
+    toast(savedMsg+' · 특성도 남겼습니다');
+  }catch(err){
+    $('#f-note').value=noteText;       /* 실패하면 적은 내용을 잃지 않게 되돌려 둡니다 */
+    toast(err&&err.error?err.error:'손님은 올렸지만 특성을 저장하지 못했습니다');
+  }
 };
 
 /* ─── 도장 · 보상 · 수정 · 삭제 ─── */
@@ -722,7 +744,7 @@ document.addEventListener('click',e=>{
     editing=id;
     $('#f-name').value=g.name;$('#f-tel').value=g.tel;$('#f-co').value=g.co;
     $('#f-bm').value=g.bm||'';$('#f-bd').value=g.bd||'';$('#f-stamp').value=g.stamp;
-    $('#f-memo').value=g.memo;
+    $('#f-memo').value=g.memo;$('#f-note').value='';
     $('#f-c1').checked=g.c1;$('#f-c2').checked=g.c2;$('#f-c3').checked=!!g.c3;
     $('#add-title').textContent=g.name+' 님 고쳐 쓰기';$('#save').textContent='고친 내용 저장';
     document.querySelector('[data-tab="add"]').click();scrollTo(0,0);
@@ -812,6 +834,16 @@ document.addEventListener('click',async e=>{
     finally{b.disabled=false;}
   }
 
+  /* 재방문 목록에서 곧바로 그 손님 기록 칸으로 데려갑니다 */
+  if(act==='go'){
+    const cid=+b.dataset.nid;
+    document.querySelector('[data-tab="note"]').click();
+    const box=$('#nt-'+cid);
+    if(box){box.scrollIntoView({block:'center',behavior:'smooth'});box.focus();}
+    else if(!canWriteNote())toast('내 이름으로 들어와야 특성을 남길 수 있습니다');
+    else toast('도장을 먼저 찍어주세요');
+  }
+
   if(act==='del'){
     if(!confirm('이 기록을 지울까요?'))return;
     try{await delNote(+b.dataset.nid);toast('기록을 지웠습니다');}
@@ -878,7 +910,8 @@ function guestRow(g,ctx){
     <div class="g-act">
       ${ctx==='reward'
         ?`<button class="btn" data-act="reward" data-id="${g.id}">무료 1잔 사용</button>`
-        :`<button class="btn" data-act="stamp" data-id="${g.id}">도장 +1</button>${canReward?`<button class="btn ghost sm" data-act="reward" data-id="${g.id}">1잔 사용</button>`:''}`}
+        :`<button class="btn" data-act="stamp" data-id="${g.id}">도장 +1</button>${canReward?`<button class="btn ghost sm" data-act="reward" data-id="${g.id}">1잔 사용</button>`:''}${
+          ctx==='re'&&visitedWithin12h(g)?`<button class="btn ghost sm" data-nact="go" data-nid="${g.id}">✎ 특성 적기</button>`:''}`}
     </div>
   </div>`;
 }
@@ -890,7 +923,8 @@ function renderRe(){
     const hay=[g.name,g.co,g.memo,String(g.tel).slice(-4),role==='owner'?g.tel:''].join(' ').toLowerCase();
     return hay.includes(q);
   });
-  rows.sort((a,b)=>daysSince(a.visit)-daysSince(b.visit));
+  /* 방금 도장 찍은 손님이 맨 위에 오도록 (바로 특성을 적을 수 있게) */
+  rows.sort((a,b)=>daysSince(a.visit)-daysSince(b.visit)||(b.lastVisitAt||0)-(a.lastVisitAt||0));
   reRows=rows;
   const cut=rows.slice(0,30);
   $('#re-list').innerHTML=cut.length

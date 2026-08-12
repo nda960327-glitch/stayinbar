@@ -163,31 +163,22 @@
     <h1>단골 장부</h1>
     <div class="sub">본인 이름과 PIN으로 들어옵니다</div>
 
-    <div id="setup" class="hide">
-      <div class="card" style="text-align:left">
-        <h2>처음 설정</h2>
-        <p class="desc">두 PIN을 정해주세요. 직원 PIN으로는 등록과 도장만, 사장 PIN으로는 전부 할 수 있습니다.</p>
-        <label>직원 PIN (숫자 4자리)</label>
-        <input id="su-staff" inputmode="numeric" maxlength="4" placeholder="예: 1111">
-        <label>사장 PIN (숫자 4자리)</label>
-        <input id="su-owner" inputmode="numeric" maxlength="4" placeholder="예: 9999">
-        <div class="row"><button class="btn" id="su-save" style="width:100%">장부 시작하기</button></div>
-      </div>
+    <div id="enter" class="hide" style="text-align:left">
+      <label for="emp-id">이름</label>
+      <select id="emp-id"></select>
+      <label for="emp-pin" style="margin-top:14px">내 PIN (앱 로그인과 같은 번호)</label>
+      <input id="emp-pin" class="pinbox" type="password" inputmode="numeric" maxlength="12" autocomplete="off">
+      <div id="pin-err" class="warn hide" style="margin-top:12px;font-size:14px">PIN이 맞지 않습니다</div>
+      <button class="btn" id="emp-go" style="width:100%;margin-top:16px">들어가기</button>
+      <div class="legal">누가 도장을 찍고 누가 특성을 적었는지 남기기 위해 <b>본인 이름으로만</b> 들어올 수 있습니다.<br>PIN은 앱 [내 정보 → 내 PIN 변경]에서 스스로 바꿀 수 있습니다.</div>
     </div>
 
-    <div id="enter" class="hide">
-      <div id="emp-login" class="hide" style="text-align:left">
-        <label for="emp-id">이름</label>
-        <select id="emp-id"></select>
-        <label for="emp-pin" style="margin-top:14px">내 PIN (앱 로그인과 같은 번호)</label>
-        <input id="emp-pin" class="pinbox" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+    <div id="offline" class="hide">
+      <div class="card" style="text-align:left">
+        <h2>장부를 열 수 없습니다</h2>
+        <p class="desc">인터넷 연결을 확인해 주세요. 잠시 후 다시 시도하면 열립니다.</p>
+        <div class="row"><button class="btn" id="retry" style="width:100%">다시 시도</button></div>
       </div>
-      <div id="shared-login" class="hide">
-        <input id="pin" class="pinbox" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
-        <div class="legal" style="text-align:left">장부 공용 PIN입니다. 이 방식으로 들어오면 이름이 남지 않아 <b>특성 기록은 남길 수 없습니다.</b></div>
-      </div>
-      <div id="pin-err" class="warn hide" style="margin-top:12px;font-size:14px">PIN이 맞지 않습니다</div>
-      <button class="link hide" id="toggle-login">공용 PIN으로 들어가기</button>
     </div>
   </div>
 </div>
@@ -350,12 +341,17 @@
       <input type="file" id="file" accept=".json" class="hide">
     </div>
     <div class="card">
-      <h2>PIN 변경</h2>
-      <div class="grid">
-        <div><label>직원 PIN</label><input id="np-staff" inputmode="numeric" maxlength="4"></div>
-        <div><label>사장 PIN</label><input id="np-owner" inputmode="numeric" maxlength="4"></div>
+      <h2>손님 도장 카드 (QR용 주소)</h2>
+      <p class="desc">이 주소로 QR 코드를 만들어 테이블에 두면, 손님이 직접 등록하고 도장을 받습니다.</p>
+      <input id="join-url" readonly onclick="this.select()">
+      <div class="row">
+        <button class="btn ghost" id="join-copy">주소 복사</button>
+        <a class="btn ghost" id="join-open" href="/join" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">열어보기</a>
       </div>
-      <div class="row"><button class="btn ghost" id="pin-save">PIN 저장</button></div>
+    </div>
+    <div class="card">
+      <h2>PIN 변경</h2>
+      <p class="desc">각자 자기 PIN은 앱의 <b>[내 정보 → 내 PIN 변경]</b>에서 직접 바꿉니다. 사장님은 [설정]에서 직원 PIN을 관리할 수 있습니다.</p>
     </div>
   </section>
 </div>
@@ -368,10 +364,11 @@
 
 <script>
 const K={C:'stayin.crm.customers.v1',E:'stayin.crm.events.v1',P:'stayin.crm.pins.v1',R:'stayin.crm.role',D:'stayin.crm.deleted.v1',
-         PIN:'stayin.crm.pin',EMP:'stayin.crm.emp',N:'stayin.crm.notes.v1',MYNAME:'stayin.crm.myname'};
+         PIN:'stayin.crm.pin',EMP:'stayin.crm.emp',N:'stayin.crm.notes.v1',MYNAME:'stayin.crm.myname',NOAUTO:'stayin.crm.noauto'};
 let C=[],E=[],D=[],N=[],P=null,role=null,editing=null,hist=[],redoStack=[],toastTimer=null,reRows=[];
 /* MODE: 'server' = 모든 기기가 한 장부 공유(온라인), 'local' = 이 기기에만 저장 */
-let MODE='local',SPIN=null,EMPID='',ME=null,STAFF=[],HASPINS=false,pushTimer=null,pushing=false;
+/* APPLOGIN: 앱(/me · /owner) 로그인 쿠키를 그대로 쓰는 중 — 장부에서 또 로그인하지 않습니다 */
+let MODE='local',SPIN=null,EMPID='',ME=null,STAFF=[],APPLOGIN=false,pushTimer=null,pushing=false;
 /* 특성 기록 12시간 창 · 적다 만 글이 자동 새로고침에 지워지지 않도록 담아둡니다 */
 const H12=12*60*60*1000,drafts={};
 
@@ -409,9 +406,10 @@ function persistLocal(){
   localStorage.setItem(K.D,JSON.stringify(D));
   localStorage.setItem(K.N,JSON.stringify(N));
 }
+const loggedIn=()=>APPLOGIN||Boolean(EMPID&&SPIN);
 function persist(){
   persistLocal();
-  if(MODE==='server'&&SPIN)schedulePush();
+  if(MODE==='server'&&loggedIn())schedulePush();
 }
 
 /* ─── 서버 공유 장부 ─── */
@@ -421,8 +419,8 @@ async function api(body){
   if(!r.ok)throw j;
   return j;
 }
-/* 로그인 증표: 이름으로 들어왔으면 아이디까지 함께 보냅니다 */
-const auth=()=>EMPID?{empId:EMPID,pin:SPIN}:{pin:SPIN};
+/* 로그인 증표: 앱 쿠키로 들어왔으면 쿠키를, 아니면 이름+PIN을 보냅니다 */
+const auth=()=>APPLOGIN?{useSession:true}:{empId:EMPID,pin:SPIN};
 function adopt(d){
   C=Array.isArray(d.customers)?d.customers:[];
   E=Array.isArray(d.events)?d.events:[];
@@ -444,13 +442,13 @@ async function doPush(){
 }
 /* 미뤄둔 저장을 지금 끝냅니다 (등록하자마자 특성을 붙일 때 씁니다) */
 async function flushPush(){
-  if(MODE!=='server'||!SPIN)return;
+  if(MODE!=='server'||!loggedIn())return;
   clearTimeout(pushTimer);pushTimer=null;
   while(pushing)await new Promise(r=>setTimeout(r,80));
   await doPush();
 }
 async function refreshFromServer(){
-  if(MODE!=='server'||!SPIN||pushing)return;
+  if(MODE!=='server'||!loggedIn()||pushing)return;
   try{const d=await api({action:'load',...auth()});if(!pushTimer)adopt(d);setSync('ok');}catch(e){setSync('err');}
 }
 function startPoll(){
@@ -552,108 +550,56 @@ function clearSession(){
   SPIN=null;EMPID='';ME=null;role=null;
   [K.R,K.PIN,K.EMP].forEach(k=>sessionStorage.removeItem(k));
 }
-$('#logout').onclick=()=>{clearSession();location.reload();};
+/* 잠그기: 앱 쿠키로 자동으로 다시 들어가지 않도록 표시해 둡니다 */
+$('#logout').onclick=()=>{clearSession();sessionStorage.setItem(K.NOAUTO,'1');location.reload();};
 
-/* ─── 로그인 화면: 내 이름 / 공용 PIN ─── */
+/* ─── 로그인 화면: 본인 이름 + 내 PIN ─── */
 function fillStaff(){
   const sel=$('#emp-id');sel.innerHTML='';
   STAFF.forEach(s=>sel.add(new Option(`${s.name} · ${s.position}`,s.id)));
 }
-function showLogin(kind){
-  const emp=kind==='emp';
-  $('#setup').classList.add('hide');
+function showLogin(){
+  $('#offline').classList.add('hide');
   $('#enter').classList.remove('hide');
-  $('#emp-login').classList.toggle('hide',!emp);
-  $('#shared-login').classList.toggle('hide',emp);
-  const t=$('#toggle-login');
-  t.classList.toggle('hide',!STAFF.length);
-  t.textContent=emp?'공용 PIN으로 들어가기':'내 이름으로 들어가기';
-  t.dataset.next=emp?'shared':'emp';
-  setTimeout(()=>$(emp?'#emp-pin':'#pin').focus(),100);
+  setTimeout(()=>$('#emp-pin').focus(),100);
+}
+function showOffline(){
+  $('#enter').classList.add('hide');
+  $('#offline').classList.remove('hide');
 }
 function loginErr(err){
   $('#pin-err').textContent=err&&err.error?err.error:'PIN이 맞지 않습니다';
   $('#pin-err').classList.remove('hide');
 }
-$('#toggle-login').onclick=()=>{
-  const next=$('#toggle-login').dataset.next;
+$('#retry').onclick=()=>location.reload();
+$('#emp-pin').oninput=e=>{
+  e.target.value=e.target.value.replace(/\D/g,'');
   $('#pin-err').classList.add('hide');
-  if(next==='shared'&&!HASPINS){   /* 공용 PIN이 아직 없으면 처음 설정으로 */
-    $('#enter').classList.add('hide');$('#setup').classList.remove('hide');return;
-  }
-  showLogin(next);
 };
-$('#emp-pin').oninput=async e=>{
-  const v=e.target.value.replace(/\D/g,'');e.target.value=v;
-  $('#pin-err').classList.add('hide');
-  if(v.length!==4)return;
-  const id=$('#emp-id').value;
+$('#emp-pin').onkeydown=e=>{if(e.key==='Enter')$('#emp-go').click();};
+$('#emp-go').onclick=async()=>{
+  const box=$('#emp-pin'),v=box.value.trim(),id=$('#emp-id').value;
   if(!id)return loginErr({error:'이름을 골라주세요'});
-  e.target.disabled=true;
+  if(v.length<4)return loginErr({error:'PIN을 입력해 주세요'});
+  const btn=$('#emp-go');btn.disabled=true;box.disabled=true;
   try{
     const d=await api({action:'load',empId:id,pin:v});
     EMPID=id;SPIN=v;ME=d.me||null;
+    sessionStorage.removeItem(K.NOAUTO);
     sessionStorage.setItem(K.EMP,id);sessionStorage.setItem(K.PIN,v);
     adopt(d);unlock(d.role);startPoll();setSync('ok');
   }catch(err){
-    e.target.value='';loginErr(err);
-  }finally{e.target.disabled=false;if(!role)e.target.focus();}
+    box.value='';loginErr(err);
+  }finally{btn.disabled=false;box.disabled=false;if(!role)box.focus();}
 };
 
-$('#su-save').onclick=async()=>{
-  const s=$('#su-staff').value.trim(),o=$('#su-owner').value.trim();
-  if(!/^\d{4}$/.test(s)||!/^\d{4}$/.test(o))return toast('PIN은 숫자 4자리로 정해주세요');
-  if(s===o)return toast('직원 PIN과 사장 PIN은 달라야 합니다');
-  if(MODE==='server'){
-    try{
-      await api({action:'setup',pins:{staff:s,owner:o}});
-      SPIN=o;EMPID='';ME=null;HASPINS=true;sessionStorage.setItem(K.PIN,o);
-      unlock('owner');startPoll();setSync('ok');
-      if(C.length||E.length)schedulePush(); /* 이 기기에 있던 장부를 서버로 올림 */
-      toast('설정 완료 — 사장으로 들어왔습니다');
-    }catch(err){toast(err&&err.error?err.error:'설정 실패 — 인터넷을 확인해 주세요');}
-    return;
-  }
-  P={staff:s,owner:o};localStorage.setItem(K.P,JSON.stringify(P));
-  unlock('owner');toast('설정 완료 — 사장으로 들어왔습니다');
-};
-$('#pin').oninput=async e=>{
-  const v=e.target.value.replace(/\D/g,'');e.target.value=v;
-  $('#pin-err').classList.add('hide');
-  if(v.length!==4)return;
-  if(MODE==='server'){
-    e.target.disabled=true;
-    try{
-      const d=await api({action:'load',pin:v});
-      SPIN=v;EMPID='';ME=null;
-      sessionStorage.setItem(K.PIN,v);sessionStorage.removeItem(K.EMP);
-      adopt(d);unlock(d.role);startPoll();setSync('ok');
-    }catch(err){
-      e.target.value='';loginErr(err);
-    }finally{e.target.disabled=false;if(!role)e.target.focus();}
-    return;
-  }
-  if(v===P.owner)unlock('owner');
-  else if(v===P.staff)unlock('staff');
-  else{e.target.value='';$('#pin-err').classList.remove('hide');}
-};
-$('#pin-save').onclick=async()=>{
-  const s=$('#np-staff').value.trim(),o=$('#np-owner').value.trim();
-  if(!/^\d{4}$/.test(s)||!/^\d{4}$/.test(o))return toast('PIN은 숫자 4자리로 적어주세요');
-  if(s===o)return toast('직원 PIN과 사장 PIN은 달라야 합니다');
-  if(MODE==='server'){
-    try{
-      await api({action:'setpins',...auth(),pins:{staff:s,owner:o}});
-      if(!EMPID){SPIN=o;sessionStorage.setItem(K.PIN,o);}  /* 이름으로 들어왔으면 내 PIN 그대로 */
-      HASPINS=true;
-      $('#np-staff').value='';$('#np-owner').value='';
-      toast('PIN을 바꿨습니다');
-    }catch(err){toast(err&&err.error?err.error:'PIN 변경 실패');}
-    return;
-  }
-  P={staff:s,owner:o};localStorage.setItem(K.P,JSON.stringify(P));
-  $('#np-staff').value='';$('#np-owner').value='';
-  toast('PIN을 바꿨습니다');
+/* ─── 손님 도장 카드 주소 (QR로 만들어 테이블에) ─── */
+$('#join-url').value=location.origin+'/join';
+$('#join-copy').onclick=()=>{
+  const url=$('#join-url').value;
+  if(navigator.clipboard)navigator.clipboard.writeText(url);
+  else $('#join-url').select();
+  toast('주소를 복사했습니다');
 };
 
 /* ─── 탭 ─── */
@@ -805,7 +751,7 @@ function visitedWithin12h(g){
 }
 const recentGuests=()=>C.filter(visitedWithin12h).sort((a,b)=>(b.lastVisitAt||0)-(a.lastVisitAt||0));
 const notesOf=id=>N.filter(n=>n.cid===id).sort((a,b)=>b.at-a.at);
-const canWriteNote=()=>MODE!=='server'||!!ME;
+const canWriteNote=()=>!!ME;   /* 이름으로 들어온 사람만 (지금은 항상 이름 로그인) */
 
 function agoText(g){
   if(!g.lastVisitAt)return '오늘';
@@ -818,30 +764,11 @@ function fmtAt(ms){
   const d=new Date(ms);
   return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-function localName(){
-  let n=localStorage.getItem(K.MYNAME)||'';
-  if(!n){n=(prompt('기록에 남길 이름을 적어주세요')||'').trim();if(n)localStorage.setItem(K.MYNAME,n);}
-  return n;
-}
-
 async function addNote(cid,text){
-  if(MODE==='server'){
-    const d=await api({action:'note',...auth(),cid,text});
-    adopt(d);
-    return;
-  }
-  const name=localName();
-  if(!name)throw{error:'이름을 적어야 기록이 남습니다'};
-  N.push({id:Date.now()+Math.floor(Math.random()*1000),cid,text,by:{id:'local',name},at:Date.now()});
-  persistLocal();render();
+  adopt(await api({action:'note',...auth(),cid,text}));
 }
 async function delNote(nid){
-  if(MODE==='server'){
-    const d=await api({action:'note-del',...auth(),noteId:nid});
-    adopt(d);
-    return;
-  }
-  N=N.filter(n=>n.id!==nid);persistLocal();render();
+  adopt(await api({action:'note-del',...auth(),noteId:nid}));
 }
 
 document.addEventListener('input',e=>{
@@ -887,7 +814,7 @@ document.addEventListener('click',async e=>{
 
 function noteLine(n){
   const mine=ME&&n.by&&n.by.id===ME.id;
-  const canDel=mine||role==='owner'||MODE!=='server';
+  const canDel=mine||role==='owner';
   return `<div class="noteitem">${esc(n.text)}
     <div class="meta"><b>${esc(n.by&&n.by.name||'?')}</b> · ${fmtAt(n.at)}${canDel?`<button class="xbtn" data-nact="del" data-nid="${n.id}">지우기</button>`:''}</div>
   </div>`;
@@ -1124,32 +1051,32 @@ $('#wipe').onclick=()=>{
     if(r.ok)probe=await r.json();
   }catch(e){}
   STAFF=probe&&Array.isArray(probe.staff)?probe.staff:[];
-  HASPINS=Boolean(probe&&probe.hasPins);
   fillStaff();
 
-  if(probe&&probe.configured){
-    MODE='server';
-    SPIN=sessionStorage.getItem(K.PIN);
-    EMPID=sessionStorage.getItem(K.EMP)||'';
-    const savedRole=sessionStorage.getItem(K.R);
-    if(SPIN&&savedRole){
-      try{
-        const d=await api({action:'load',...auth()});
-        adopt(d);role=d.role;ME=d.me||null;sessionStorage.setItem(K.R,role);
-        showApp();startPoll();
-        return;
-      }catch(e){clearSession();}
-    }
-    if(STAFF.length)showLogin('emp');            /* 기본은 내 이름으로 들어가기 */
-    else if(!HASPINS)$('#setup').classList.remove('hide');
-    else showLogin('shared');
-    return;
+  if(!probe||!probe.configured){showOffline();return;}
+  MODE='server';
+
+  const enter=async(body)=>{
+    const d=await api({action:'load',...body});
+    adopt(d);role=d.role;ME=d.me||null;sessionStorage.setItem(K.R,role);
+    showApp();startPoll();
+  };
+
+  /* 1) 앱에 이미 로그인해 있으면 그대로 들어갑니다 (두 번 로그인 없음) */
+  if(probe.session&&sessionStorage.getItem(K.NOAUTO)!=='1'){
+    APPLOGIN=true;
+    try{ await enter({useSession:true}); return; }catch(e){APPLOGIN=false;}
   }
 
-  MODE='local';
-  role=sessionStorage.getItem(K.R);
-  if(role&&P){showApp();setSync();}
-  else if(!P){$('#setup').classList.remove('hide');}
-  else showLogin('shared');
+  /* 2) 이 탭에서 이미 이름+PIN으로 들어온 적이 있으면 이어서 */
+  SPIN=sessionStorage.getItem(K.PIN);
+  EMPID=sessionStorage.getItem(K.EMP)||'';
+  if(EMPID&&SPIN&&sessionStorage.getItem(K.R)){
+    try{ await enter({empId:EMPID,pin:SPIN}); return; }catch(e){clearSession();}
+  }
+
+  /* 3) 그 외에는 본인 이름으로 로그인 */
+  showLogin();
+  if(probe.session)$('#emp-id').value=probe.session.id;
 })();
 </script>

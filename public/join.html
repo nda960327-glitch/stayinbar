@@ -1,0 +1,409 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1512">
+<title>STAY IN BAR · 도장 카드</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap');
+
+  :root{
+    --ink:#0f1512;
+    --moss:#16241d;
+    --moss-2:#1d2f26;
+    --line:#2c4438;
+    --brass:#c9a227;
+    --leaf:#7fa88c;
+    --paper:#e8e4d9;
+    --paper-dim:#9aa79f;
+    --alert:#d97a5c;
+    --fur:#242a2c;
+    --fur-2:#1a1f21;
+    --white:#f5f1e6;
+    --tongue:#e88fa4;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:radial-gradient(120% 90% at 50% 0%,#1a2a22 0%,var(--ink) 60%);
+    min-height:100vh;color:var(--paper);
+    font-family:'IBM Plex Sans KR',system-ui,sans-serif;font-weight:300;font-size:16px;
+  }
+  .wrap{max-width:460px;margin:0 auto;padding:14px 16px 40px;position:relative}
+  .hide{display:none !important}
+
+  .eyebrow{font-size:11px;letter-spacing:.28em;color:var(--brass);text-transform:uppercase;text-align:center}
+  h1{font-family:'Gowun Batang',serif;font-weight:700;font-size:25px;margin:6px 0 0;text-align:center;letter-spacing:-.01em}
+  .lede{text-align:center;color:var(--paper-dim);font-size:14px;line-height:1.7;margin:10px 0 0}
+
+  /* ── 보리(보더콜리) ── */
+  .stage{position:relative;display:flex;flex-direction:column;align-items:center;margin-top:6px}
+  .dog{width:190px;height:auto;display:block;filter:drop-shadow(0 10px 18px rgba(0,0,0,.45))}
+  .dog .tail{transform-box:view-box;transform-origin:174px 176px;animation:wag .5s ease-in-out infinite alternate}
+  .dog .head{transform-box:view-box;transform-origin:120px 130px;animation:bob 2.6s ease-in-out infinite}
+  .dog .eyes{transform-box:view-box;transform-origin:120px 92px;animation:blink 5s infinite}
+  .dog.happy{animation:hop .6s ease 2}
+  .dog.happy .tail{animation-duration:.16s}
+  @keyframes wag{from{transform:rotate(-16deg)}to{transform:rotate(16deg)}}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+  @keyframes hop{0%,100%{transform:translateY(0)}30%{transform:translateY(-16px)}60%{transform:translateY(0)}}
+
+  .bubble{
+    position:relative;background:var(--white);color:#1d2a22;border-radius:16px;
+    padding:12px 16px;font-size:15px;font-weight:400;line-height:1.6;text-align:center;
+    max-width:320px;margin:0 0 -4px;box-shadow:0 6px 16px rgba(0,0,0,.35);
+  }
+  .bubble:after{
+    content:'';position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);
+    border:10px solid transparent;border-top-color:var(--white);border-bottom:0;
+  }
+  .bubble b{font-weight:600;color:#12341f}
+
+  /* ── 카드 · 입력 ── */
+  .card{background:var(--moss);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
+  .card h2{font-family:'Gowun Batang',serif;font-size:18px;margin:0 0 4px;font-weight:700}
+  .card .sub{font-size:13px;color:var(--paper-dim);margin:0 0 14px;line-height:1.6}
+
+  label{display:block;font-size:12px;letter-spacing:.06em;color:var(--leaf);margin:14px 0 6px}
+  label:first-child{margin-top:0}
+  input,select{
+    width:100%;background:var(--ink);border:1px solid var(--line);color:var(--paper);
+    padding:14px;border-radius:10px;font:inherit;font-size:17px;
+  }
+  input:focus,select:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
+  .two{display:flex;gap:10px}
+  .req{color:var(--brass)}
+
+  .btn{
+    display:block;width:100%;background:var(--brass);color:#12180f;border:none;
+    padding:16px;border-radius:12px;font:inherit;font-weight:600;font-size:17px;
+    cursor:pointer;min-height:56px;margin-top:12px;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.6}
+  .btn.ghost{background:none;color:var(--paper);border:1px solid var(--line);font-weight:400}
+  .btn.big{font-size:18px;padding:20px;border-radius:14px}
+  .btn.big small{display:block;font-weight:400;font-size:13px;opacity:.75;margin-top:3px}
+  .btn.ghost.big small{opacity:.6}
+
+  .agree{margin-top:16px;border-top:1px solid var(--line);padding-top:6px}
+  .agree label{
+    display:flex;align-items:flex-start;gap:11px;margin:0;padding:12px 2px;
+    font-size:14px;color:var(--paper);letter-spacing:0;cursor:pointer;line-height:1.5;
+  }
+  .agree input{width:22px;height:22px;min-width:22px;margin-top:1px;accent-color:var(--brass)}
+  .agree .tag{font-size:11px;color:var(--brass);border:1px solid var(--brass);border-radius:999px;padding:1px 7px;margin-right:4px}
+  .agree .tag.opt{color:var(--paper-dim);border-color:var(--line)}
+
+  .err{color:var(--alert);font-size:14px;margin-top:10px;text-align:center;line-height:1.6}
+
+  /* ── 도장 카드 ── */
+  .stamps{display:flex;justify-content:center;gap:9px;margin:6px 0 4px}
+  .slot{
+    width:52px;height:52px;border-radius:50%;border:2px dashed var(--line);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .slot .paw{width:26px;height:26px;fill:var(--line);opacity:.5}
+  .slot.on{border:2px solid var(--brass);background:rgba(201,162,39,.14)}
+  .slot.on .paw{fill:var(--brass);opacity:1}
+  .slot.pop{animation:pop .55s cubic-bezier(.2,1.5,.4,1)}
+  @keyframes pop{0%{transform:scale(0) rotate(-40deg)}70%{transform:scale(1.25) rotate(6deg)}100%{transform:scale(1)}}
+
+  .shout{font-family:'Gowun Batang',serif;font-size:24px;font-weight:700;text-align:center;margin:14px 0 0;line-height:1.45}
+  .shout .accent{color:var(--brass)}
+  .gift{
+    border:1px solid var(--brass);background:rgba(201,162,39,.1);border-radius:12px;
+    padding:14px;margin-top:14px;text-align:center;font-size:15px;line-height:1.7;
+  }
+  .gift b{color:var(--brass);font-weight:600}
+  .count{text-align:center;color:var(--paper-dim);font-size:14px;margin-top:12px;line-height:1.6}
+
+  .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9}
+  .confetti i{
+    position:absolute;top:-20px;font-size:20px;animation:fall linear forwards;
+  }
+  @keyframes fall{to{transform:translateY(105vh) rotate(420deg);opacity:.2}}
+
+  .foot{text-align:center;color:var(--paper-dim);font-size:12px;margin-top:22px;line-height:1.8}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="paw" viewBox="0 0 24 24">
+  <ellipse cx="12" cy="15.5" rx="6.2" ry="5.2"/>
+  <ellipse cx="4.6" cy="9.6" rx="2.6" ry="3.4"/>
+  <ellipse cx="9.6" cy="6.2" rx="2.6" ry="3.7"/>
+  <ellipse cx="14.6" cy="6.2" rx="2.6" ry="3.7"/>
+  <ellipse cx="19.4" cy="9.6" rx="2.6" ry="3.4"/>
+</symbol></svg>
+
+<div class="wrap">
+  <div class="stage">
+    <div class="bubble" id="bubble">안녕하세요! 저는 <b>보리</b>예요 🐾<br>도장 찍어드릴게요!</div>
+
+    <!-- 보더콜리 '보리' -->
+    <svg class="dog" id="dog" viewBox="0 0 240 232" role="img" aria-label="보더콜리 강아지 보리">
+      <!-- 꼬리 -->
+      <g class="tail">
+        <path d="M170 178 C200 176 210 148 197 129 C192 121 180 124 183 136 C187 152 180 166 166 168 Z" fill="var(--fur)"/>
+        <path d="M197 129 C192 121 180 124 183 136 C185 129 192 126 197 129 Z" fill="var(--white)"/>
+      </g>
+
+      <!-- 몸 -->
+      <ellipse cx="120" cy="180" rx="60" ry="46" fill="var(--fur)"/>
+      <ellipse cx="120" cy="188" rx="33" ry="37" fill="var(--white)"/>
+      <rect x="99" y="176" width="18" height="43" rx="9" fill="var(--white)"/>
+      <rect x="123" y="176" width="18" height="43" rx="9" fill="var(--white)"/>
+      <ellipse cx="108" cy="217" rx="12.5" ry="7.5" fill="var(--white)"/>
+      <ellipse cx="132" cy="217" rx="12.5" ry="7.5" fill="var(--white)"/>
+      <path d="M104 217h9M127 217h9" stroke="#cfc7b4" stroke-width="1.6" stroke-linecap="round"/>
+
+      <!-- 나비넥타이 -->
+      <path d="M120 150 L100 140 L100 160 Z" fill="var(--brass)"/>
+      <path d="M120 150 L140 140 L140 160 Z" fill="var(--brass)"/>
+      <circle cx="120" cy="150" r="6" fill="#e0b93c"/>
+
+      <g class="head">
+        <!-- 귀 -->
+        <path d="M85 58 C64 50 45 67 48 93 C50 113 67 124 81 115 C72 97 77 73 85 58 Z" fill="var(--fur-2)"/>
+        <path d="M155 58 C176 50 195 67 192 93 C190 113 173 124 159 115 C168 97 163 73 155 58 Z" fill="var(--fur-2)"/>
+        <!-- 머리 -->
+        <ellipse cx="120" cy="90" rx="52" ry="46" fill="var(--fur)"/>
+        <!-- 이마 흰줄 -->
+        <path d="M120 45 C111 62 109 80 109 100 L131 100 C131 80 129 62 120 45 Z" fill="var(--white)"/>
+        <!-- 볼 -->
+        <ellipse cx="90" cy="112" rx="10" ry="6.5" fill="var(--tongue)" opacity=".3"/>
+        <ellipse cx="150" cy="112" rx="10" ry="6.5" fill="var(--tongue)" opacity=".3"/>
+        <!-- 눈썹 점 -->
+        <ellipse cx="99" cy="74" rx="5" ry="3.4" fill="#b98a4e" opacity=".9"/>
+        <ellipse cx="141" cy="74" rx="5" ry="3.4" fill="#b98a4e" opacity=".9"/>
+        <!-- 눈 -->
+        <g class="eyes">
+          <ellipse cx="99" cy="92" rx="8.5" ry="9.5" fill="#15181a"/>
+          <ellipse cx="141" cy="92" rx="8.5" ry="9.5" fill="#15181a"/>
+          <circle cx="96" cy="88.5" r="3.1" fill="#fff"/>
+          <circle cx="138" cy="88.5" r="3.1" fill="#fff"/>
+          <circle cx="102" cy="95" r="1.4" fill="#fff" opacity=".7"/>
+          <circle cx="144" cy="95" r="1.4" fill="#fff" opacity=".7"/>
+        </g>
+        <!-- 주둥이 -->
+        <ellipse cx="120" cy="115" rx="27" ry="20" fill="var(--white)"/>
+        <path d="M112 106 q8 -6 16 0 q0 10 -8 12.5 q-8 -2.5 -8 -12.5 Z" fill="#1b1f21"/>
+        <path d="M120 119 q-7 8 -14 2 M120 119 q7 8 14 2" stroke="#1b1f21" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <!-- 혀 -->
+        <path d="M113 126 q7 5 14 0 q0 13 -7 14 q-7 -1 -7 -14 Z" fill="var(--tongue)"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ══ 첫 화면 ══ -->
+  <section id="s-home">
+    <div class="eyebrow">Stay in Bar · 비밀의 정원</div>
+    <h1>도장 카드</h1>
+    <p class="lede">오실 때마다 도장 하나씩!<br><b style="color:var(--brass);font-weight:600">5개를 모으면 엄청난 선물</b>이 기다리고 있어요 🎁</p>
+
+    <button class="btn big" data-go="new">처음이에요 · 등록할래요<small>이름과 번호만 적으면 끝!</small></button>
+    <button class="btn ghost big" data-go="re">다녀간 적 있어요 · 재방문<small>번호만 넣으면 도장 하나 더</small></button>
+  </section>
+
+  <!-- ══ 신규 등록 ══ -->
+  <section id="s-new" class="hide">
+    <div class="card">
+      <h2>처음 오셨군요, 반가워요!</h2>
+      <p class="sub">적어주신 정보는 도장 적립과 생일·이벤트 안내에만 씁니다.</p>
+
+      <label for="f-name">이름 <span class="req">*</span> <span style="color:var(--paper-dim)">(별명도 좋아요)</span></label>
+      <input id="f-name" placeholder="김도아" autocomplete="name">
+
+      <label for="f-tel">휴대폰 11자리 <span class="req">*</span></label>
+      <input id="f-tel" inputmode="numeric" maxlength="13" placeholder="01012345678" autocomplete="tel">
+
+      <label for="f-co">회사 · 팀 <span style="color:var(--paper-dim)">(선택)</span></label>
+      <input id="f-co" placeholder="한빛물산 마케팅팀">
+
+      <label>생일 <span style="color:var(--paper-dim)">(선택 · 생일에 선물 드려요)</span></label>
+      <div class="two">
+        <select id="f-bm"><option value="">월</option></select>
+        <select id="f-bd"><option value="">일</option></select>
+      </div>
+
+      <div class="agree">
+        <label><input type="checkbox" id="f-c1"><span><span class="tag">필수</span>개인정보 수집·이용에 동의합니다 <span style="color:var(--paper-dim)">(이름·번호·생일 / 회원 탈퇴 요청 시 삭제)</span></span></label>
+        <label><input type="checkbox" id="f-c2" checked><span><span class="tag opt">선택</span>생일·이벤트 혜택 문자를 받을게요</span></label>
+        <label><input type="checkbox" id="f-c3"><span><span class="tag opt">선택</span>밤 9시~아침 8시에도 문자 받을게요</span></label>
+      </div>
+
+      <div class="err hide" id="new-err"></div>
+      <button class="btn" id="do-new">등록하고 도장 받기 🐾</button>
+      <button class="btn ghost" data-go="home">뒤로</button>
+    </div>
+  </section>
+
+  <!-- ══ 재방문 ══ -->
+  <section id="s-re" class="hide">
+    <div class="card">
+      <h2>또 오셨네요, 반가워요!</h2>
+      <p class="sub">등록하신 휴대폰 번호를 넣어주세요.</p>
+      <label for="r-tel">휴대폰 11자리</label>
+      <input id="r-tel" inputmode="numeric" maxlength="13" placeholder="01012345678" autocomplete="tel">
+      <div class="err hide" id="re-err"></div>
+      <button class="btn" id="do-re">도장 받기 🐾</button>
+      <button class="btn ghost" data-go="home">뒤로</button>
+    </div>
+  </section>
+
+  <!-- ══ 결과 ══ -->
+  <section id="s-done" class="hide">
+    <div class="card">
+      <div class="stamps" id="stamps"></div>
+      <div class="shout" id="shout"></div>
+      <div class="gift" id="gift"></div>
+      <div class="count" id="count"></div>
+      <button class="btn ghost" data-go="home" style="margin-top:18px">처음으로</button>
+    </div>
+  </section>
+
+  <div class="foot">STAY IN BAR · 비밀의 정원<br>도장은 방문하실 때마다 하나씩 쌓입니다</div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const dog=$('#dog'),bubble=$('#bubble');
+let busy=false;
+
+const SAY={
+  home:'안녕하세요! 저는 <b>보리</b>예요 🐾<br>도장 찍어드릴게요!',
+  new:'이름이랑 번호만 알려주세요!<br>제가 도장 콱 찍어드릴게요 🐾',
+  re:'번호만 넣어주시면<br>바로 찍어드릴게요! 🐾',
+};
+function say(html){bubble.innerHTML=html;}
+function wag(){dog.classList.remove('happy');void dog.offsetWidth;dog.classList.add('happy');}
+
+/* 화면 넘기기 */
+function go(name){
+  ['home','new','re','done'].forEach(k=>$('#s-'+k).classList.toggle('hide',k!==name));
+  if(SAY[name])say(SAY[name]);
+  scrollTo({top:0,behavior:'smooth'});
+  if(name==='new')setTimeout(()=>$('#f-name').focus(),250);
+  if(name==='re')setTimeout(()=>$('#r-tel').focus(),250);
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-go]');
+  if(b)go(b.dataset.go);
+});
+
+/* 생일 칸 채우기 */
+for(let m=1;m<=12;m++)$('#f-bm').add(new Option(m+'월',m));
+for(let d=1;d<=31;d++)$('#f-bd').add(new Option(d+'일',d));
+
+/* 번호는 적는 대로 010-1234-5678 모양으로 */
+function telMask(el){
+  el.addEventListener('input',()=>{
+    const n=el.value.replace(/\D/g,'').slice(0,11);
+    el.value=n.length>7?`${n.slice(0,3)}-${n.slice(3,7)}-${n.slice(7)}`
+            :n.length>3?`${n.slice(0,3)}-${n.slice(3)}`:n;
+  });
+}
+telMask($('#f-tel'));telMask($('#r-tel'));
+const digits=el=>el.value.replace(/\D/g,'');
+
+function showErr(id,msg){const el=$(id);el.textContent=msg;el.classList.remove('hide');}
+function hideErr(id){$(id).classList.add('hide');}
+
+async function post(body){
+  const r=await fetch('/api/join',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw j;
+  return j;
+}
+
+/* ── 신규 등록 ── */
+$('#do-new').onclick=async()=>{
+  if(busy)return;
+  hideErr('#new-err');
+  const name=$('#f-name').value.trim(),tel=digits($('#f-tel'));
+  if(!name)return showErr('#new-err','이름을 적어주세요.');
+  if(tel.length!==11)return showErr('#new-err','휴대폰 번호 11자리를 확인해 주세요.');
+  if(!$('#f-c1').checked)return showErr('#new-err','도장 적립을 위해 [필수] 개인정보 수집·이용 동의가 필요해요.');
+  const btn=$('#do-new');busy=true;btn.disabled=true;btn.textContent='도장 찍는 중…';
+  try{
+    const d=await post({action:'signup',name,tel,co:$('#f-co').value.trim(),
+      bm:$('#f-bm').value,bd:$('#f-bd').value,
+      c1:true,c2:$('#f-c2').checked,c3:$('#f-c3').checked});
+    done(d);
+  }catch(err){showErr('#new-err',err&&err.error?err.error:'잠시 후 다시 해주세요. 직원에게 말씀해 주셔도 돼요.');}
+  finally{busy=false;btn.disabled=false;btn.textContent='등록하고 도장 받기 🐾';}
+};
+
+/* ── 재방문 ── */
+$('#do-re').onclick=async()=>{
+  if(busy)return;
+  hideErr('#re-err');
+  const tel=digits($('#r-tel'));
+  if(tel.length!==11)return showErr('#re-err','휴대폰 번호 11자리를 확인해 주세요.');
+  const btn=$('#do-re');busy=true;btn.disabled=true;btn.textContent='도장 찍는 중…';
+  try{
+    const d=await post({action:'checkin',tel});
+    done(d);
+  }catch(err){
+    showErr('#re-err',err&&err.message?err.message:err&&err.error==='not-found'
+      ?'아직 등록된 번호가 아니에요. 처음이시면 등록해 주세요!'
+      :(err&&err.error)||'잠시 후 다시 해주세요.');
+  }
+  finally{busy=false;btn.disabled=false;btn.textContent='도장 받기 🐾';}
+};
+
+/* ── 도장 카드 그리기 ── */
+function drawStamps(stamp,goal,justAdded){
+  const filled=Math.min(stamp,goal);
+  $('#stamps').innerHTML=Array.from({length:goal},(_,i)=>
+    `<div class="slot${i<filled?' on':''}${justAdded&&i===filled-1?' pop':''}">
+       <svg class="paw" viewBox="0 0 24 24"><use href="#paw"/></svg>
+     </div>`).join('');
+}
+
+function confetti(){
+  const box=document.createElement('div');box.className='confetti';
+  const marks=['🎉','✨','🎁','🐾','🥂'];
+  for(let i=0;i<26;i++){
+    const s=document.createElement('i');
+    s.textContent=marks[i%marks.length];
+    s.style.left=(i*3.9+2)+'%';
+    s.style.animationDuration=(2.2+(i%5)*.45)+'s';
+    s.style.animationDelay=((i%7)*.16)+'s';
+    box.appendChild(s);
+  }
+  document.body.appendChild(box);
+  setTimeout(()=>box.remove(),6000);
+}
+
+/* ── 결과 화면 ── */
+function done(d){
+  const goal=d.goal||5,left=Math.max(goal-d.stamp,0);
+  const already=d.kind==='already';
+  drawStamps(d.stamp,goal,!already);
+  go('done');
+  wag();
+
+  const nm=d.name?`${d.name} 님, `:'';
+  if(already){
+    say(`${d.name?'<b>'+d.name+'</b> 님, ':''}오늘은 이미 찍어드렸어요! 😊`);
+    $('#shout').innerHTML='오늘 도장은<br>이미 받으셨어요!';
+    $('#gift').innerHTML='필요한 게 있으시면 <b>직원에게 말씀해 주세요</b> 🙂';
+  }else{
+    say(`${d.name?'<b>'+d.name+'</b> 님, ':''}${d.kind==='new'?'등록 완료! 반가워요 🎉':'또 만나서 반가워요! 🎉'}`);
+    $('#shout').innerHTML='<span class="accent">도장이 적립</span>되었습니다!';
+    $('#gift').innerHTML='오늘은 <b>웰컴 드링크</b>를 드릴게요 🍸<br><b>직원에게 요청해 주세요!</b>';
+  }
+
+  if(d.stamp>=goal){
+    $('#count').innerHTML=`도장 ${d.stamp}개 · <b style="color:var(--brass)">엄청난 선물이 기다리고 있어요! 🎁</b><br>이 화면을 직원에게 보여주세요.`;
+    if(!already)confetti();
+  }else{
+    $('#count').innerHTML=`도장 ${d.stamp}개 · <b style="color:var(--brass)">${left}개만 더</b> 모으면 엄청난 선물이 기다려요 🎁`;
+  }
+  if(d.done>0)$('#count').innerHTML+=`<br>지금까지 ${d.done}번이나 다 모으셨어요, 고마워요!`;
+}
+
+/* 강아지를 쓰다듬으면 좋아합니다 */
+dog.addEventListener('click',()=>{wag();say('헤헷, 간지러워요! 🐾');});
+</script>

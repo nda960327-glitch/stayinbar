@@ -2,8 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
-    // 고객관리(단골 장부): 로그인 없이 쓰는 독립 페이지 (public/customers.html)
-    return [{ source: "/customers", destination: "/customers.html" }];
+    return [
+      // 고객관리(단골 장부): 직원용 독립 페이지 (public/customers.html)
+      { source: "/customers", destination: "/customers.html" },
+      // 손님이 QR로 여는 도장 카드 (public/join.html)
+      { source: "/join", destination: "/join.html" },
+    ];
   },
 };
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { won, wonShort, pct } from "@/lib/format";
 import type { EmployeeReport } from "@/lib/types";
 import EmployeeDetail from "@/components/EmployeeDetail";
+import ChangePin from "./ChangePin";
 
 interface MyData {
   role: string;
@@ -111,6 +112,8 @@ export default function MyPage() {
           </div>
         </div>
       )}
+
+      <ChangePin />
     </>
   );
 }

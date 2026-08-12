@@ -112,6 +112,12 @@
   .checks{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 4px;padding:12px;background:var(--ink);border:1px dashed var(--line);border-radius:3px}
   .checks label{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--paper);margin:0;cursor:pointer}
   .checks input{width:auto;min-height:20px;min-width:20px}
+  /* 동의: 버튼 하나로 세 가지를 한 번에 (필요하면 하나씩 펼쳐서 고름) */
+  .consent{flex-direction:column;align-items:stretch;gap:10px}
+  .consent .btn{width:100%}
+  .consent .legal{margin:0}
+  .consent .link{align-self:flex-start;margin:0;padding:4px 0}
+  .consent #c-each{display:flex;gap:16px;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--line)}
   .legal{font-size:12px;color:var(--paper-dim);margin-top:10px;line-height:1.6}
 
   /* 잠금 화면 */
@@ -243,10 +249,15 @@
         <textarea id="f-note" maxlength="500" placeholder="기억날 때 지금 적어두세요 — 적은 사람 이름과 시각이 함께 남습니다"></textarea>
       </div>
 
-      <div class="checks">
-        <label><input type="checkbox" id="f-c1" checked> 개인정보 수집·이용 동의</label>
-        <label><input type="checkbox" id="f-c2" checked> 광고 수신 동의</label>
-        <label><input type="checkbox" id="f-c3"> 야간(21~08시) 수신 동의</label>
+      <div class="checks consent">
+        <button type="button" class="btn" id="c-all" aria-pressed="true">✓ 동의 모두 받음</button>
+        <div class="legal">개인정보 수집·이용 · 광고 수신 · 야간(21~08시) 수신 — 종이 카드에 받은 대로 한 번에 처리됩니다.</div>
+        <button type="button" class="link" id="c-detail">하나씩 고르기</button>
+        <div id="c-each" class="hide">
+          <label><input type="checkbox" id="f-c1" checked> 개인정보 수집·이용</label>
+          <label><input type="checkbox" id="f-c2" checked> 광고 수신</label>
+          <label><input type="checkbox" id="f-c3" checked> 야간(21~08시) 수신</label>
+        </div>
       </div>
       <div class="legal">광고 문자는 <b>광고 수신 동의</b>한 손님에게만 보낼 수 있습니다. 동의 없는 손님은 발송 명단에서 자동으로 빠집니다.</div>
 
@@ -665,10 +676,32 @@ function showTel(g){
 for(let m=1;m<=12;m++)$('#f-bm').add(new Option(m+'월',m));
 for(let d=1;d<=31;d++)$('#f-bd').add(new Option(d+'일',d));
 
+/* ─── 동의: 버튼 하나로 세 가지 ─── */
+const CB=['f-c1','f-c2','f-c3'];
+const consentOn=()=>CB.filter(i=>$('#'+i).checked).length;
+function paintConsent(){
+  const b=$('#c-all'),n=consentOn();
+  b.textContent=n===3?'✓ 동의 모두 받음':n===0?'동의 받기 — 눌러주세요':`동의 ${n}/3 (아래에서 확인)`;
+  b.classList.toggle('ghost',n!==3);
+  b.setAttribute('aria-pressed',n===3?'true':'false');
+}
+function showConsentDetail(open){
+  $('#c-each').classList.toggle('hide',!open);
+  $('#c-detail').textContent=open?'접기':'하나씩 고르기';
+}
+$('#c-all').onclick=()=>{
+  const all=consentOn()===3;
+  CB.forEach(i=>$('#'+i).checked=!all);   /* 모두 켜기 ↔ 모두 끄기 */
+  paintConsent();
+};
+$('#c-detail').onclick=()=>showConsentDetail($('#c-each').classList.contains('hide'));
+CB.forEach(i=>$('#'+i).onchange=paintConsent);
+
 function resetForm(){
   ['f-name','f-tel','f-co','f-memo','f-note'].forEach(i=>$('#'+i).value='');
   $('#f-bm').value='';$('#f-bd').value='';$('#f-stamp').value=1;
-  $('#f-c1').checked=$('#f-c2').checked=true;$('#f-c3').checked=false;
+  CB.forEach(i=>$('#'+i).checked=true);
+  paintConsent();showConsentDetail(false);
   editing=null;$('#add-title').textContent='종이 카드 옮겨 적기';$('#save').textContent='장부에 올리기';
   $('#f-name').focus();
 }
@@ -745,7 +778,8 @@ document.addEventListener('click',e=>{
     $('#f-name').value=g.name;$('#f-tel').value=g.tel;$('#f-co').value=g.co;
     $('#f-bm').value=g.bm||'';$('#f-bd').value=g.bd||'';$('#f-stamp').value=g.stamp;
     $('#f-memo').value=g.memo;$('#f-note').value='';
-    $('#f-c1').checked=g.c1;$('#f-c2').checked=g.c2;$('#f-c3').checked=!!g.c3;
+    $('#f-c1').checked=!!g.c1;$('#f-c2').checked=!!g.c2;$('#f-c3').checked=!!g.c3;
+    paintConsent();showConsentDetail(consentOn()!==3);   /* 일부만 동의한 손님이면 펼쳐서 보여줍니다 */
     $('#add-title').textContent=g.name+' 님 고쳐 쓰기';$('#save').textContent='고친 내용 저장';
     document.querySelector('[data-tab="add"]').click();scrollTo(0,0);
   }

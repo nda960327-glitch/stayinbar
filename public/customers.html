@@ -46,11 +46,12 @@
   .card .desc{font-size:13px;color:var(--paper-dim);margin:-6px 0 14px;line-height:1.6}
 
   label{display:block;font-size:11px;letter-spacing:.1em;color:var(--leaf);margin-bottom:5px;text-transform:uppercase}
-  input,select{
+  input,select,textarea{
     width:100%;background:var(--ink);border:1px solid var(--line);color:var(--paper);
     padding:12px;border-radius:3px;font:inherit;font-size:16px;
   }
-  input:focus,select:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
+  textarea{min-height:66px;resize:vertical;line-height:1.6}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 
   .btn{
@@ -98,6 +99,16 @@
   .empty{text-align:center;padding:38px 16px;color:var(--paper-dim);font-size:14px;line-height:1.8}
   .empty strong{display:block;font-family:'Gowun Batang',serif;font-size:17px;color:var(--paper);margin-bottom:6px;font-weight:700}
 
+  /* 특성 기록 */
+  .notebox{background:var(--ink);border:1px solid var(--line);border-radius:4px;padding:14px;margin-bottom:12px}
+  .notebox .head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .ago{font-size:12px;color:var(--brass);white-space:nowrap}
+  .noteitem{border-left:2px solid var(--brass-dim);padding:2px 0 2px 10px;margin-top:10px;font-size:15px;line-height:1.65}
+  .noteitem .meta{font-size:11px;color:var(--paper-dim);margin-top:3px}
+  .noteitem .meta b{color:var(--leaf);font-weight:600}
+  .xbtn{background:none;border:none;color:var(--paper-dim);font:inherit;font-size:11px;cursor:pointer;padding:2px 6px;text-decoration:underline}
+  .link{background:none;border:none;color:var(--paper-dim);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:10px;margin-top:14px}
+
   .checks{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 4px;padding:12px;background:var(--ink);border:1px dashed var(--line);border-radius:3px}
   .checks label{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--paper);margin:0;cursor:pointer}
   .checks input{width:auto;min-height:20px;min-width:20px}
@@ -114,8 +125,8 @@
   }
   .lockcard label{text-align:left;margin-top:14px}
 
+  .fabs{position:fixed;right:12px;bottom:22px;z-index:98;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
   .undo-fab{
-    position:fixed;right:12px;bottom:22px;z-index:98;
     background:var(--moss-2);border:1px solid var(--brass);color:var(--brass);
     border-radius:999px;padding:12px 18px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;
     box-shadow:0 4px 18px rgba(0,0,0,.5);max-width:72vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
@@ -144,7 +155,7 @@
   <div class="lockcard">
     <div class="eyebrow">Stay in · 비밀의 정원</div>
     <h1>단골 장부</h1>
-    <div class="sub">직원용 · 사장용 PIN으로 들어옵니다</div>
+    <div class="sub">본인 이름과 PIN으로 들어옵니다</div>
 
     <div id="setup" class="hide">
       <div class="card" style="text-align:left">
@@ -159,8 +170,18 @@
     </div>
 
     <div id="enter" class="hide">
-      <input id="pin" class="pinbox" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+      <div id="emp-login" class="hide" style="text-align:left">
+        <label for="emp-id">이름</label>
+        <select id="emp-id"></select>
+        <label for="emp-pin" style="margin-top:14px">내 PIN (앱 로그인과 같은 번호)</label>
+        <input id="emp-pin" class="pinbox" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+      </div>
+      <div id="shared-login" class="hide">
+        <input id="pin" class="pinbox" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+        <div class="legal" style="text-align:left">장부 공용 PIN입니다. 이 방식으로 들어오면 이름이 남지 않아 <b>특성 기록은 남길 수 없습니다.</b></div>
+      </div>
       <div id="pin-err" class="warn hide" style="margin-top:12px;font-size:14px">PIN이 맞지 않습니다</div>
+      <button class="link hide" id="toggle-login">공용 PIN으로 들어가기</button>
     </div>
   </div>
 </div>
@@ -182,6 +203,7 @@
   <div class="tabs" role="tablist">
     <button class="tab" data-tab="re" aria-selected="true">재방문</button>
     <button class="tab" data-tab="add" aria-selected="false">신규 등록</button>
+    <button class="tab" data-tab="note" aria-selected="false">특성 기록 <span class="n hide" id="n-note">0</span></button>
     <button class="tab" data-tab="reward" aria-selected="false">보상 <span class="n hide" id="n-reward">0</span></button>
     <button class="tab owner-only" data-tab="roster" aria-selected="false">명단 <span class="n" id="n-roster">0</span></button>
     <button class="tab owner-only" data-tab="send" aria-selected="false">발송 명단</button>
@@ -228,6 +250,18 @@
         <button class="btn" id="save" style="flex:1">장부에 올리기</button>
         <button class="btn ghost" id="clear">비우기</button>
       </div>
+    </div>
+  </section>
+
+  <!-- 특성 기록 -->
+  <section id="p-note" class="hide">
+    <div class="card">
+      <h2>오늘 오신 손님 특성 적기</h2>
+      <p class="desc">
+        도장을 찍었거나 새로 등록한 지 <b>12시간</b> 안이면 여기에 뜹니다.
+        퇴근 전이나 쉬는 시간에 기억나는 대로 적어주세요. 누가 적었는지 이름과 시각이 함께 남습니다.
+      </p>
+      <div id="note-list"></div>
     </div>
   </section>
 
@@ -311,14 +345,20 @@
   </section>
 </div>
 
-<button id="undo-fab" class="undo-fab hide"></button>
+<div class="fabs">
+  <button id="redo-fab" class="undo-fab hide"></button>
+  <button id="undo-fab" class="undo-fab hide"></button>
+</div>
 <div class="toast" id="toast"><span id="toast-msg"></span><button id="toast-undo" class="hide">되돌리기</button></div>
 
 <script>
-const K={C:'stayin.crm.customers.v1',E:'stayin.crm.events.v1',P:'stayin.crm.pins.v1',R:'stayin.crm.role',D:'stayin.crm.deleted.v1',PIN:'stayin.crm.pin'};
-let C=[],E=[],D=[],P=null,role=null,editing=null,hist=[],toastTimer=null,reRows=[];
+const K={C:'stayin.crm.customers.v1',E:'stayin.crm.events.v1',P:'stayin.crm.pins.v1',R:'stayin.crm.role',D:'stayin.crm.deleted.v1',
+         PIN:'stayin.crm.pin',EMP:'stayin.crm.emp',N:'stayin.crm.notes.v1',MYNAME:'stayin.crm.myname'};
+let C=[],E=[],D=[],N=[],P=null,role=null,editing=null,hist=[],redoStack=[],toastTimer=null,reRows=[];
 /* MODE: 'server' = 모든 기기가 한 장부 공유(온라인), 'local' = 이 기기에만 저장 */
-let MODE='local',SPIN=null,pushTimer=null,pushing=false;
+let MODE='local',SPIN=null,EMPID='',ME=null,STAFF=[],HASPINS=false,pushTimer=null,pushing=false;
+/* 특성 기록 12시간 창 · 적다 만 글이 자동 새로고침에 지워지지 않도록 담아둡니다 */
+const H12=12*60*60*1000,drafts={};
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
@@ -333,6 +373,7 @@ function loadAll(){
   try{C=JSON.parse(localStorage.getItem(K.C)||'[]')}catch(e){C=[]}
   try{E=JSON.parse(localStorage.getItem(K.E)||'[]')}catch(e){E=[]}
   try{D=JSON.parse(localStorage.getItem(K.D)||'[]')}catch(e){D=[]}
+  try{N=JSON.parse(localStorage.getItem(K.N)||'[]')}catch(e){N=[]}
   try{P=JSON.parse(localStorage.getItem(K.P)||'null')}catch(e){P=null}
   /* 예전 손님 장부(stayin-guest-book) 데이터 자동 이어받기 */
   if(!C.length){
@@ -351,6 +392,7 @@ function persistLocal(){
   localStorage.setItem(K.C,JSON.stringify(C));
   localStorage.setItem(K.E,JSON.stringify(E));
   localStorage.setItem(K.D,JSON.stringify(D));
+  localStorage.setItem(K.N,JSON.stringify(N));
 }
 function persist(){
   persistLocal();
@@ -364,10 +406,13 @@ async function api(body){
   if(!r.ok)throw j;
   return j;
 }
+/* 로그인 증표: 이름으로 들어왔으면 아이디까지 함께 보냅니다 */
+const auth=()=>EMPID?{empId:EMPID,pin:SPIN}:{pin:SPIN};
 function adopt(d){
   C=Array.isArray(d.customers)?d.customers:[];
   E=Array.isArray(d.events)?d.events:[];
   D=Array.isArray(d.deleted)?d.deleted:[];
+  N=Array.isArray(d.notes)?d.notes:[];
   persistLocal();render();
 }
 function schedulePush(){clearTimeout(pushTimer);pushTimer=setTimeout(doPush,400);}
@@ -376,7 +421,7 @@ async function doPush(){
   if(pushing){schedulePush();return;}
   pushing=true;
   try{
-    const d=await api({action:'save',pin:SPIN,customers:C,events:E,deleted:D});
+    const d=await api({action:'save',...auth(),customers:C,events:E,deleted:D});
     if(!pushTimer)adopt(d); /* 보내는 사이 새 변경이 없을 때만 서버 결과 반영 */
     setSync('ok');
   }catch(e){setSync('err');}
@@ -384,7 +429,7 @@ async function doPush(){
 }
 async function refreshFromServer(){
   if(MODE!=='server'||!SPIN||pushing)return;
-  try{const d=await api({action:'load',pin:SPIN});if(!pushTimer)adopt(d);setSync('ok');}catch(e){setSync('err');}
+  try{const d=await api({action:'load',...auth()});if(!pushTimer)adopt(d);setSync('ok');}catch(e){setSync('err');}
 }
 function startPoll(){
   if(startPoll.on)return;startPoll.on=true;
@@ -399,31 +444,42 @@ function setSync(s){
   else{el.textContent='공유 장부 ✓';el.style.color='var(--leaf)';el.style.borderColor='var(--leaf)';}
 }
 
-/* ─── 알림 · 되돌리기 ─── */
-function toast(msg,withUndo){
+/* ─── 알림 · 되돌리기 · 되살리기 ─── */
+/* act: 'undo'(되돌리기) · 'redo'(되살리기) · 없으면 버튼 없음 */
+function toast(msg,act){
+  const kind=act===true?'undo':act||null;
+  const b=$('#toast-undo');
   $('#toast-msg').textContent=msg;
-  $('#toast-undo').classList.toggle('hide',!withUndo);
+  if(kind){
+    b.textContent=kind==='undo'?'되돌리기':'되살리기';
+    b.dataset.kind=kind;
+    b.classList.remove('hide');
+  }else b.classList.add('hide');
   $('#toast').classList.add('on');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>$('#toast').classList.remove('on'),withUndo?6000:2200);
+  toastTimer=setTimeout(()=>$('#toast').classList.remove('on'),kind?6000:2200);
 }
+const snapshot=label=>({label,C:JSON.parse(JSON.stringify(C)),E:JSON.parse(JSON.stringify(E)),D:JSON.parse(JSON.stringify(D))});
+
 /* 최근 20개 동작을 기억해 두고 차례로 되돌립니다 (도장·완주·삭제·등록·수정·복원·전부지우기) */
 function pushHist(label){
-  hist.push({label,C:JSON.parse(JSON.stringify(C)),E:JSON.parse(JSON.stringify(E)),D:JSON.parse(JSON.stringify(D))});
+  hist.push(snapshot(label));
   if(hist.length>20)hist.shift();
+  redoStack=[];   /* 새로 뭔가 하면 되살릴 것은 사라집니다 */
   updateFab();
 }
 function updateFab(){
-  const f=$('#undo-fab');
-  if(hist.length){f.textContent='↩ 취소: '+hist[hist.length-1].label;f.classList.remove('hide');}
-  else f.classList.add('hide');
+  const u=$('#undo-fab'),r=$('#redo-fab');
+  if(hist.length){u.textContent='↩ 취소: '+hist[hist.length-1].label;u.classList.remove('hide');}
+  else u.classList.add('hide');
+  if(redoStack.length){r.textContent='↪ 되살리기: '+redoStack[redoStack.length-1].label;r.classList.remove('hide');}
+  else r.classList.add('hide');
 }
-function undoLast(){
-  const h=hist.pop();if(!h)return;
+/* 저장해 둔 장부로 되돌립니다. 공유 모드에서는 이 결과가 서버 병합에서 이기도록 시각을 갱신합니다 */
+function applySnapshot(s){
   const prevC=C;
-  C=h.C;E=h.E;D=h.D||D;
+  C=s.C;E=s.E;D=s.D||D;
   if(MODE==='server'){
-    /* 공유 모드: 되돌린 결과가 서버 병합에서 이기도록 수정 시각을 갱신 */
     const now=Date.now();
     const before=new Map(prevC.map(c=>[c.id,JSON.stringify(c)]));
     C.forEach(c=>{if(before.get(c.id)!==JSON.stringify(c))c.u=now;});
@@ -432,17 +488,33 @@ function undoLast(){
     D=D.filter(d=>{const live=C.find(c=>c.id===d.id);return !live||(live.u||0)<d.at;});
   }
   persist();render();updateFab();
-  $('#toast').classList.remove('on');
-  setTimeout(()=>toast(`'${h.label}' 취소했습니다`),120);
 }
-$('#toast-undo').onclick=undoLast;
+function undoLast(){
+  const h=hist.pop();if(!h)return;
+  redoStack.push(snapshot(h.label));      /* 취소를 잘못 눌러도 되살릴 수 있게 */
+  if(redoStack.length>20)redoStack.shift();
+  applySnapshot(h);
+  $('#toast').classList.remove('on');
+  setTimeout(()=>toast(`'${h.label}' 취소했습니다`,'redo'),120);
+}
+function redoLast(){
+  const r=redoStack.pop();if(!r)return;
+  hist.push(snapshot(r.label));
+  if(hist.length>20)hist.shift();
+  applySnapshot(r);
+  $('#toast').classList.remove('on');
+  setTimeout(()=>toast(`'${r.label}' 되살렸습니다`,'undo'),120);
+}
+$('#toast-undo').onclick=()=>{$('#toast-undo').dataset.kind==='redo'?redoLast():undoLast();};
 $('#undo-fab').onclick=undoLast;
+$('#redo-fab').onclick=redoLast;
 
 /* ─── 잠금 · PIN ─── */
 function showApp(){
   $('#lock').classList.add('hide');
   $('#app').classList.remove('hide');
-  $('#role-pill').textContent=role==='owner'?'사장':'직원';
+  const label=role==='owner'?'사장':'직원';
+  $('#role-pill').textContent=ME?`${ME.name} · ${label}`:label;
   $$('.owner-only').forEach(el=>el.classList.toggle('hide',role!=='owner'));
   if(MODE==='server'){
     $('#backup-desc').textContent='손님 정보는 공유 장부(서버)에 저장되어 모든 기기에서 똑같이 보입니다. 그래도 한 달에 한 번 백업을 받아두시면 더 안전합니다.';
@@ -454,7 +526,57 @@ function showApp(){
 function unlock(r){
   role=r;sessionStorage.setItem(K.R,r);showApp();
 }
-$('#logout').onclick=()=>{sessionStorage.removeItem(K.R);sessionStorage.removeItem(K.PIN);location.reload();};
+function clearSession(){
+  SPIN=null;EMPID='';ME=null;role=null;
+  [K.R,K.PIN,K.EMP].forEach(k=>sessionStorage.removeItem(k));
+}
+$('#logout').onclick=()=>{clearSession();location.reload();};
+
+/* ─── 로그인 화면: 내 이름 / 공용 PIN ─── */
+function fillStaff(){
+  const sel=$('#emp-id');sel.innerHTML='';
+  STAFF.forEach(s=>sel.add(new Option(`${s.name} · ${s.position}`,s.id)));
+}
+function showLogin(kind){
+  const emp=kind==='emp';
+  $('#setup').classList.add('hide');
+  $('#enter').classList.remove('hide');
+  $('#emp-login').classList.toggle('hide',!emp);
+  $('#shared-login').classList.toggle('hide',emp);
+  const t=$('#toggle-login');
+  t.classList.toggle('hide',!STAFF.length);
+  t.textContent=emp?'공용 PIN으로 들어가기':'내 이름으로 들어가기';
+  t.dataset.next=emp?'shared':'emp';
+  setTimeout(()=>$(emp?'#emp-pin':'#pin').focus(),100);
+}
+function loginErr(err){
+  $('#pin-err').textContent=err&&err.error?err.error:'PIN이 맞지 않습니다';
+  $('#pin-err').classList.remove('hide');
+}
+$('#toggle-login').onclick=()=>{
+  const next=$('#toggle-login').dataset.next;
+  $('#pin-err').classList.add('hide');
+  if(next==='shared'&&!HASPINS){   /* 공용 PIN이 아직 없으면 처음 설정으로 */
+    $('#enter').classList.add('hide');$('#setup').classList.remove('hide');return;
+  }
+  showLogin(next);
+};
+$('#emp-pin').oninput=async e=>{
+  const v=e.target.value.replace(/\D/g,'');e.target.value=v;
+  $('#pin-err').classList.add('hide');
+  if(v.length!==4)return;
+  const id=$('#emp-id').value;
+  if(!id)return loginErr({error:'이름을 골라주세요'});
+  e.target.disabled=true;
+  try{
+    const d=await api({action:'load',empId:id,pin:v});
+    EMPID=id;SPIN=v;ME=d.me||null;
+    sessionStorage.setItem(K.EMP,id);sessionStorage.setItem(K.PIN,v);
+    adopt(d);unlock(d.role);startPoll();setSync('ok');
+  }catch(err){
+    e.target.value='';loginErr(err);
+  }finally{e.target.disabled=false;if(!role)e.target.focus();}
+};
 
 $('#su-save').onclick=async()=>{
   const s=$('#su-staff').value.trim(),o=$('#su-owner').value.trim();
@@ -463,7 +585,7 @@ $('#su-save').onclick=async()=>{
   if(MODE==='server'){
     try{
       await api({action:'setup',pins:{staff:s,owner:o}});
-      SPIN=o;sessionStorage.setItem(K.PIN,o);
+      SPIN=o;EMPID='';ME=null;HASPINS=true;sessionStorage.setItem(K.PIN,o);
       unlock('owner');startPoll();setSync('ok');
       if(C.length||E.length)schedulePush(); /* 이 기기에 있던 장부를 서버로 올림 */
       toast('설정 완료 — 사장으로 들어왔습니다');
@@ -481,12 +603,11 @@ $('#pin').oninput=async e=>{
     e.target.disabled=true;
     try{
       const d=await api({action:'load',pin:v});
-      SPIN=v;sessionStorage.setItem(K.PIN,v);
+      SPIN=v;EMPID='';ME=null;
+      sessionStorage.setItem(K.PIN,v);sessionStorage.removeItem(K.EMP);
       adopt(d);unlock(d.role);startPoll();setSync('ok');
     }catch(err){
-      e.target.value='';
-      $('#pin-err').textContent=err&&err.error?err.error:'PIN이 맞지 않습니다';
-      $('#pin-err').classList.remove('hide');
+      e.target.value='';loginErr(err);
     }finally{e.target.disabled=false;if(!role)e.target.focus();}
     return;
   }
@@ -500,8 +621,9 @@ $('#pin-save').onclick=async()=>{
   if(s===o)return toast('직원 PIN과 사장 PIN은 달라야 합니다');
   if(MODE==='server'){
     try{
-      await api({action:'setpins',pin:SPIN,pins:{staff:s,owner:o}});
-      SPIN=o;sessionStorage.setItem(K.PIN,o);
+      await api({action:'setpins',...auth(),pins:{staff:s,owner:o}});
+      if(!EMPID){SPIN=o;sessionStorage.setItem(K.PIN,o);}  /* 이름으로 들어왔으면 내 PIN 그대로 */
+      HASPINS=true;
       $('#np-staff').value='';$('#np-owner').value='';
       toast('PIN을 바꿨습니다');
     }catch(err){toast(err&&err.error?err.error:'PIN 변경 실패');}
@@ -515,7 +637,7 @@ $('#pin-save').onclick=async()=>{
 /* ─── 탭 ─── */
 $$('.tab').forEach(b=>b.onclick=()=>{
   $$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));
-  ['re','add','reward','roster','send','stats','data'].forEach(k=>$('#p-'+k).classList.toggle('hide',k!==b.dataset.tab));
+  ['re','add','note','reward','roster','send','stats','data'].forEach(k=>$('#p-'+k).classList.toggle('hide',k!==b.dataset.tab));
   render();
   if(b.dataset.tab==='re')$('#q').focus();
   if(b.dataset.tab==='add')$('#f-name').focus();
@@ -555,6 +677,8 @@ $('#save').onclick=()=>{
     bm:+$('#f-bm').value||0,bd:+$('#f-bd').value||0,
     stamp:+$('#f-stamp').value||0,
     visit:prev?prev.visit:today(),
+    /* 신규 등록도 방문입니다. 수정일 때는 원래 방문 시각을 건드리지 않습니다 */
+    lastVisitAt:prev?(prev.lastVisitAt||0):Date.now(),
     memo:$('#f-memo').value.trim(),
     c1:$('#f-c1').checked,c2:$('#f-c2').checked,c3:$('#f-c3').checked,
     done:prev?(prev.done||0):0,
@@ -563,7 +687,7 @@ $('#save').onclick=()=>{
   };
   pushHist(editing?name+' 수정':name+' 등록');
   if(editing){C=C.map(g=>g.id===editing?rec:g);}
-  else{C.push(rec);E.push({t:'new',d:today(),id:rec.id,k:Math.random().toString(36).slice(2,8)});}
+  else{C.push(rec);E.push({t:'new',d:today(),ts:Date.now(),id:rec.id,k:Math.random().toString(36).slice(2,8)});}
   persist();
   const wasEdit=!!editing;
   resetForm();render();
@@ -578,8 +702,8 @@ document.addEventListener('click',e=>{
 
   if(act==='stamp'){
     pushHist(g.name+' 도장 +1');
-    g.stamp++;g.visit=today();g.u=Date.now();
-    E.push({t:'re',d:today(),id,k:Math.random().toString(36).slice(2,8)});
+    g.stamp++;g.visit=today();g.lastVisitAt=Date.now();g.u=Date.now();
+    E.push({t:'re',d:today(),ts:Date.now(),id,k:Math.random().toString(36).slice(2,8)});
     const fromRe=!!b.closest('#p-re');
     if(fromRe)$('#q').value='';   /* 다음 손님 바로 검색할 수 있게 비움 */
     persist();render();
@@ -615,6 +739,128 @@ document.addEventListener('click',e=>{
     toast('번호 복사됨');
   }
 });
+
+/* ─── 손님 특성 기록 ───
+   12시간 안에 도장을 찍었거나 새로 등록한 손님만 대상입니다.
+   서버 모드에서는 누가 적었는지를 서버가 로그인 정보로 직접 새깁니다. */
+function visitedWithin12h(g){
+  if(g.lastVisitAt)return Date.now()-g.lastVisitAt<=H12;
+  return g.visit===today();   /* 시각이 없던 예전 기록 */
+}
+const recentGuests=()=>C.filter(visitedWithin12h).sort((a,b)=>(b.lastVisitAt||0)-(a.lastVisitAt||0));
+const notesOf=id=>N.filter(n=>n.cid===id).sort((a,b)=>b.at-a.at);
+const canWriteNote=()=>MODE!=='server'||!!ME;
+
+function agoText(g){
+  if(!g.lastVisitAt)return '오늘';
+  const m=Math.floor((Date.now()-g.lastVisitAt)/60000);
+  if(m<1)return '방금';
+  if(m<60)return m+'분 전';
+  return Math.floor(m/60)+'시간 '+(m%60)+'분 전';
+}
+function fmtAt(ms){
+  const d=new Date(ms);
+  return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function localName(){
+  let n=localStorage.getItem(K.MYNAME)||'';
+  if(!n){n=(prompt('기록에 남길 이름을 적어주세요')||'').trim();if(n)localStorage.setItem(K.MYNAME,n);}
+  return n;
+}
+
+async function addNote(cid,text){
+  if(MODE==='server'){
+    const d=await api({action:'note',...auth(),cid,text});
+    adopt(d);
+    return;
+  }
+  const name=localName();
+  if(!name)throw{error:'이름을 적어야 기록이 남습니다'};
+  N.push({id:Date.now()+Math.floor(Math.random()*1000),cid,text,by:{id:'local',name},at:Date.now()});
+  persistLocal();render();
+}
+async function delNote(nid){
+  if(MODE==='server'){
+    const d=await api({action:'note-del',...auth(),noteId:nid});
+    adopt(d);
+    return;
+  }
+  N=N.filter(n=>n.id!==nid);persistLocal();render();
+}
+
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t&&t.dataset&&t.dataset.draft)drafts[t.dataset.draft]=t.value;
+});
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-nact]');if(!b)return;
+  const act=b.dataset.nact;
+
+  if(act==='add'){
+    const cid=+b.dataset.nid,g=byId(cid);if(!g)return;
+    const box=$('#nt-'+cid);
+    const text=(box?box.value:'').trim();
+    if(!text){toast('적을 내용을 먼저 써주세요');if(box)box.focus();return;}
+    b.disabled=true;
+    try{
+      await addNote(cid,text);
+      delete drafts[cid];
+      const again=$('#nt-'+cid);if(again)again.value='';
+      render();
+      toast(`${g.name} 님 특성을 남겼습니다`);
+    }catch(err){toast(err&&err.error?err.error:'저장하지 못했습니다 — 인터넷을 확인해 주세요');}
+    finally{b.disabled=false;}
+  }
+
+  if(act==='del'){
+    if(!confirm('이 기록을 지울까요?'))return;
+    try{await delNote(+b.dataset.nid);toast('기록을 지웠습니다');}
+    catch(err){toast(err&&err.error?err.error:'지우지 못했습니다');}
+  }
+});
+
+function noteLine(n){
+  const mine=ME&&n.by&&n.by.id===ME.id;
+  const canDel=mine||role==='owner'||MODE!=='server';
+  return `<div class="noteitem">${esc(n.text)}
+    <div class="meta"><b>${esc(n.by&&n.by.name||'?')}</b> · ${fmtAt(n.at)}${canDel?`<button class="xbtn" data-nact="del" data-nid="${n.id}">지우기</button>`:''}</div>
+  </div>`;
+}
+
+function renderNote(){
+  const rows=recentGuests();
+  const badge=$('#n-note');
+  badge.textContent=rows.length;badge.classList.toggle('hide',!rows.length);
+
+  /* 다시 그리기 전에, 적다 만 글과 커서 위치를 기억해 둡니다 */
+  const a=document.activeElement;
+  const aid=a&&a.dataset?a.dataset.draft:null;
+  const pos=aid?a.selectionStart:0;
+
+  const head=canWriteNote()?'':
+    '<div class="legal warn">공용 PIN으로 들어와 있어 이름이 남지 않습니다. [잠그기]를 누르고 <b>내 이름</b>으로 다시 들어와 주세요.</div>';
+
+  $('#note-list').innerHTML=head+(rows.length?rows.map(g=>{
+    const ns=notesOf(g.id);
+    return `<div class="notebox">
+      <div class="head">
+        <div>
+          <span class="g-name">${esc(g.name)}</span>
+          <div class="g-sub">${[g.co&&esc(g.co),g.memo&&esc(g.memo),`도장 ${g.stamp}개`].filter(Boolean).join(' · ')}</div>
+        </div>
+        <span class="ago">${agoText(g)} 방문</span>
+      </div>
+      ${ns.length?ns.map(noteLine).join(''):'<div class="g-sub" style="margin-top:8px">아직 적힌 특성이 없습니다.</div>'}
+      ${canWriteNote()?`<div style="margin-top:12px">
+        <textarea id="nt-${g.id}" data-draft="${g.id}" maxlength="500" placeholder="예: 위스키 하이볼 좋아하심 · 조용한 구석자리 선호 · 목요일마다 오심 · 회사 총무"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn sm" data-nact="add" data-nid="${g.id}">기록 남기기</button></div>
+      </div>`:''}
+    </div>`;
+  }).join(''):'<div class="empty"><strong>12시간 안에 오신 손님이 없습니다</strong>도장을 찍거나 신규 등록을 하면 여기에 뜹니다.</div>');
+
+  Object.keys(drafts).forEach(k=>{const t=$('#nt-'+k);if(t)t.value=drafts[k];});
+  if(aid){const t=$('#nt-'+aid);if(t){t.focus();try{t.setSelectionRange(pos,pos)}catch(e){}}}
+}
 
 /* ─── 그리기 ─── */
 function stampDots(g){
@@ -671,7 +917,9 @@ function rosterTable(rows,mode){
   </tr></thead><tbody>${rows.map(g=>{
     const d=daysSince(g.visit);
     return `<tr>
-      <td><div class="g-name" style="font-size:15px">${esc(g.name)}</div>${g.co?`<div class="g-sub">${esc(g.co)}</div>`:''}${g.memo?`<div class="g-sub">${esc(g.memo)}</div>`:''}</td>
+      <td><div class="g-name" style="font-size:15px">${esc(g.name)}</div>${g.co?`<div class="g-sub">${esc(g.co)}</div>`:''}${g.memo?`<div class="g-sub">${esc(g.memo)}</div>`:''}${
+        mode==='roster'?notesOf(g.id).slice(0,3).map(n=>`<div class="g-sub">✎ ${esc(n.text)} <span style="color:var(--leaf)">— ${esc(n.by&&n.by.name||'?')} ${fmtAt(n.at)}</span></div>`).join(''):''
+      }</td>
       <td class="tel">${showTel(g)}${role==='owner'?` <button class="btn ghost sm" data-act="copy" data-id="${g.id}">복사</button>`:''}</td>
       <td style="color:var(--brass);font-weight:600">${g.stamp}${g.done?`<div class="g-sub">완주 ${g.done}</div>`:''}</td>
       <td>${mode==='bday'?`<b>${g.bm}/${g.bd}</b>`:`${g.visit||'-'}<div class="g-sub ${d>=21?'warn':''}">${d>9000?'기록 없음':d+'일 전'}</div>`}</td>
@@ -728,7 +976,7 @@ function renderStats(){
 }
 
 function render(){
-  renderRe();renderReward();renderRoster();renderSend();renderStats();
+  renderRe();renderNote();renderReward();renderRoster();renderSend();renderStats();
 }
 $('#q').oninput=renderRe;
 /* 한 명만 남았으면 Enter(확인) = 도장 +1 */
@@ -760,7 +1008,7 @@ $$('[data-csv]').forEach(b=>b.onclick=()=>{
 
 $('#backup').onclick=()=>{
   if(!C.length)return toast('백업할 내용이 없습니다');
-  dl(`stayin_backup_${today()}.json`,JSON.stringify({v:2,exported:today(),customers:C,events:E}),false);
+  dl(`stayin_backup_${today()}.json`,JSON.stringify({v:3,exported:today(),customers:C,events:E,notes:N}),false);
   toast('백업 받았습니다');
 };
 $('#restore').onclick=()=>$('#file').click();
@@ -775,7 +1023,7 @@ $('#file').onchange=e=>{
       else if(d&&Array.isArray(d.customers)){list=d.customers;ev=Array.isArray(d.events)?d.events:[];}
       else throw 0;
       list=list.map(g=>({id:g.id,name:g.name||'',tel:String(g.tel||''),co:g.co||'',bm:+g.bm||0,bd:+g.bd||0,
-        stamp:+g.stamp||0,visit:g.visit||'',memo:g.memo||'',c1:!!g.c1,c2:!!g.c2,c3:!!g.c3,
+        stamp:+g.stamp||0,visit:g.visit||'',lastVisitAt:+g.lastVisitAt||0,memo:g.memo||'',c1:!!g.c1,c2:!!g.c2,c3:!!g.c3,
         done:+g.done||0,created:g.created||g.visit||today()}));
       if(!confirm(`손님 ${list.length}명을 불러옵니다. 지금 장부는 덮어씁니다.`))return;
       pushHist('백업 복원');
@@ -807,21 +1055,26 @@ $('#wipe').onclick=()=>{
     const r=await fetch('/api/guestbook',{cache:'no-store'});
     if(r.ok)probe=await r.json();
   }catch(e){}
+  STAFF=probe&&Array.isArray(probe.staff)?probe.staff:[];
+  HASPINS=Boolean(probe&&probe.hasPins);
+  fillStaff();
 
   if(probe&&probe.configured){
     MODE='server';
     SPIN=sessionStorage.getItem(K.PIN);
+    EMPID=sessionStorage.getItem(K.EMP)||'';
     const savedRole=sessionStorage.getItem(K.R);
     if(SPIN&&savedRole){
       try{
-        const d=await api({action:'load',pin:SPIN});
-        adopt(d);role=d.role;sessionStorage.setItem(K.R,role);
+        const d=await api({action:'load',...auth()});
+        adopt(d);role=d.role;ME=d.me||null;sessionStorage.setItem(K.R,role);
         showApp();startPoll();
         return;
-      }catch(e){SPIN=null;sessionStorage.removeItem(K.PIN);sessionStorage.removeItem(K.R);}
+      }catch(e){clearSession();}
     }
-    if(!probe.hasPins){$('#setup').classList.remove('hide');}
-    else{$('#enter').classList.remove('hide');setTimeout(()=>$('#pin').focus(),100);}
+    if(STAFF.length)showLogin('emp');            /* 기본은 내 이름으로 들어가기 */
+    else if(!HASPINS)$('#setup').classList.remove('hide');
+    else showLogin('shared');
     return;
   }
 
@@ -829,6 +1082,6 @@ $('#wipe').onclick=()=>{
   role=sessionStorage.getItem(K.R);
   if(role&&P){showApp();setSync();}
   else if(!P){$('#setup').classList.remove('hide');}
-  else{$('#enter').classList.remove('hide');setTimeout(()=>$('#pin').focus(),100);}
+  else showLogin('shared');
 })();
 </script>

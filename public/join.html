@@ -227,9 +227,8 @@
       </div>
 
       <div class="agree">
-        <label><input type="checkbox" id="f-c1"><span><span class="tag">필수</span>개인정보 수집·이용에 동의합니다 <span style="color:var(--paper-dim)">(이름·번호·생일 / 회원 탈퇴 요청 시 삭제)</span></span></label>
-        <label><input type="checkbox" id="f-c2" checked><span><span class="tag opt">선택</span>생일·이벤트 혜택 문자를 받을게요</span></label>
-        <label><input type="checkbox" id="f-c3"><span><span class="tag opt">선택</span>밤 9시~아침 8시에도 문자 받을게요</span></label>
+        <label><input type="checkbox" id="f-c1" checked><span><span class="tag">필수</span>개인정보 수집·이용에 동의합니다 <span style="color:var(--paper-dim)">(이름·번호·생일 / 회원 탈퇴 요청 시 삭제)</span></span></label>
+        <label><input type="checkbox" id="f-c2" checked><span><span class="tag">필수</span>생일·이벤트 혜택 문자를 받을게요</span></label>
       </div>
 
       <div class="err hide" id="new-err"></div>
@@ -323,12 +322,12 @@ $('#do-new').onclick=async()=>{
   const name=$('#f-name').value.trim(),tel=digits($('#f-tel'));
   if(!name)return showErr('#new-err','이름을 적어주세요.');
   if(tel.length!==11)return showErr('#new-err','휴대폰 번호 11자리를 확인해 주세요.');
-  if(!$('#f-c1').checked)return showErr('#new-err','도장 적립을 위해 [필수] 개인정보 수집·이용 동의가 필요해요.');
+  if(!$('#f-c1').checked||!$('#f-c2').checked)return showErr('#new-err','도장 적립을 위해 [필수] 동의 두 가지가 모두 필요해요.');
   const btn=$('#do-new');busy=true;btn.disabled=true;btn.textContent='도장 찍는 중…';
   try{
     const d=await post({action:'signup',name,tel,co:$('#f-co').value.trim(),
       bm:$('#f-bm').value,bd:$('#f-bd').value,
-      c1:true,c2:$('#f-c2').checked,c3:$('#f-c3').checked});
+      c1:true,c2:true,c3:false});
     done(d);
   }catch(err){showErr('#new-err',err&&err.error?err.error:'잠시 후 다시 해주세요. 직원에게 말씀해 주셔도 돼요.');}
   finally{busy=false;btn.disabled=false;btn.textContent='등록하고 도장 받기 🐾';}

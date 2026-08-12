@@ -85,6 +85,15 @@ export interface TakeHome {
   mode: TaxMode;
 }
 
+// 업무일지 하루치 — 그날 잘한 점·개선할 점을 어떻게 썼는지 그대로 보여주기 위한 것
+export interface DailyLog {
+  date: string;        // YYYY-MM-DD
+  good: string;        // 난 오늘 (잘한 일)
+  improve: string;     // 난 오늘 (개선해야 할 점)
+  extras: { label: string; text: string }[]; // 그 밖의 칸 (수행한 업무 등)
+  blank: boolean;      // 잘한 점·개선할 점을 둘 다 비워둔 날
+}
+
 export interface EmployeeReport {
   id: string;
   name: string;
@@ -109,6 +118,8 @@ export interface EmployeeReport {
     bankAccount: string;
   };
   texts: string[]; // AI 분석용 텍스트 모음
+  dailyLogs: DailyLog[]; // 날짜별 업무일지 원문
+  blankDays: number; // 잘한 점·개선할 점을 비워둔 날 수
   contract?: Partial<EmploymentContract>;
 }
 

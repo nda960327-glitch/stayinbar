@@ -40,7 +40,10 @@ export async function POST(req: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "OPENAI_API_KEY가 설정되지 않았습니다. .env 파일에 키를 추가하세요." },
+      {
+        error:
+          "AI 키가 아직 등록되지 않았습니다. Vercel → Settings → Environment Variables 에 OPENAI_API_KEY를 넣고 재배포해 주세요. (로컬은 .env.local)",
+      },
       { status: 500 }
     );
   }
@@ -62,8 +65,16 @@ export async function POST(req: Request) {
 - 칭찬/비판 모두 실제 기록에 근거해야 하며 지어내지 않는다.
 - 모든 출력은 한국어로 작성한다.`;
 
+  const blankNote =
+    emp.blankDays > 0
+      ? `\n※ 업무일지 ${emp.dailyLogs.length}일 중 ${emp.blankDays}일은 잘한 점·개선할 점을 비워뒀습니다 (${emp.dailyLogs
+          .filter((l) => l.blank)
+          .map((l) => l.date)
+          .join(", ")}). 이 점도 개선할 점에 반영한다.`
+      : "";
+
   const userPrompt = `직원 이름: ${emp.name} (${emp.position})
-근무 요약: 출근 ${emp.attendanceDays}일, 기여점수 ${emp.score}점, 기여율 ${emp.contributionRate.toFixed(1)}%
+근무 요약: 출근 ${emp.attendanceDays}일, 기여점수 ${emp.score}점, 기여율 ${emp.contributionRate.toFixed(1)}%${blankNote}
 
 [업무일지 기록]
 ${logText}`;

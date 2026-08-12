@@ -12,6 +12,14 @@ interface AiReport {
   improvements: string[];
 }
 
+// 2026-08-12 → 8/12 (수)
+const WEEK = ["일", "월", "화", "수", "목", "금", "토"];
+function dayLabel(date: string): string {
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return date || "날짜 없음";
+  return `${d.getMonth() + 1}/${d.getDate()} (${WEEK[d.getDay()]})`;
+}
+
 export default function EmployeeDetail({
   emp,
   month,
@@ -26,6 +34,9 @@ export default function EmployeeDetail({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiErr, setAiErr] = useState("");
   const [showRrn, setShowRrn] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const logs = emp.dailyLogs ?? [];
+  const blankDays = emp.blankDays ?? logs.filter((l) => l.blank).length;
   const [editingInfo, setEditingInfo] = useState(false);
   const [infoForm, setInfoForm] = useState({
     phone: emp.personal?.phone ?? "",
@@ -265,6 +276,83 @@ export default function EmployeeDetail({
             [생성] 버튼을 누르면 업무일지를 분석해 잘한 점과 개선할 점을 정리합니다. 일지가 부실하면 &quot;제대로 작성되지 않았습니다&quot;로 표시됩니다.
           </p>
         )}
+      </div>
+
+      {/* 업무일지 원문 (날짜별) */}
+      <div className="card mt" style={{ background: "var(--bg-2)" }}>
+        <div className="row spread">
+          <h2 style={{ margin: 0 }}>
+            리포트 자세히 보기 <span className="sub">날짜별 잘한 점 · 개선할 점 원문</span>
+          </h2>
+          <button className="btn ghost sm" onClick={() => setShowLogs((v) => !v)}>
+            {showLogs ? "닫기" : `${logs.length}일치 보기`}
+          </button>
+        </div>
+
+        {logs.length > 0 && (
+          <p className={`notice ${blankDays ? "warn" : ""} mt-s`}>
+            {month} 업무일지 {logs.length}일 작성
+            {blankDays > 0 ? (
+              <>
+                {" "}· <b>{blankDays}일은 잘한 점·개선할 점을 비워뒀습니다</b> (
+                {logs.filter((l) => l.blank).map((l) => dayLabel(l.date)).join(", ")})
+              </>
+            ) : (
+              " · 빈칸 없이 모두 적었습니다 👍"
+            )}
+          </p>
+        )}
+
+        {showLogs &&
+          (logs.length ? (
+            <div className="mt">
+              {logs.map((l, i) => (
+                <div
+                  key={`${l.date}-${i}`}
+                  style={{
+                    borderLeft: `3px solid ${l.blank ? "var(--warn, #d97a5c)" : "var(--accent, #c9a227)"}`,
+                    padding: "10px 0 10px 12px",
+                    marginBottom: 12,
+                  }}
+                >
+                  <div className="row spread">
+                    <b>{dayLabel(l.date)}</b>
+                    {l.blank && <span className="muted small">잘한 점·개선할 점 비어 있음</span>}
+                  </div>
+
+                  <div className="mt-s">
+                    <div className="cap">잘한 점</div>
+                    <div style={{ whiteSpace: "pre-wrap" }}>
+                      {l.good || <span className="muted">— 안 적음 —</span>}
+                    </div>
+                  </div>
+
+                  <div className="mt-s">
+                    <div className="cap">개선할 점</div>
+                    <div style={{ whiteSpace: "pre-wrap" }}>
+                      {l.improve || <span className="muted">— 안 적음 —</span>}
+                    </div>
+                  </div>
+
+                  {l.extras.length > 0 && (
+                    <details className="mt-s">
+                      <summary className="muted small" style={{ cursor: "pointer" }}>
+                        그 밖에 적은 것 {l.extras.length}칸
+                      </summary>
+                      {l.extras.map((x) => (
+                        <div key={x.label} className="mt-s">
+                          <div className="cap">{x.label}</div>
+                          <div style={{ whiteSpace: "pre-wrap" }}>{x.text}</div>
+                        </div>
+                      ))}
+                    </details>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="notice mt-s">{month} 에 작성된 업무일지가 없습니다.</div>
+          ))}
       </div>
     </div>
   );

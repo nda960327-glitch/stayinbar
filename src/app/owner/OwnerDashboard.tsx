@@ -394,6 +394,11 @@ export default function OwnerDashboard() {
                       <td>
                         {e.name}
                         <div className="muted small">{e.position}</div>
+                        {(e.blankDays ?? 0) > 0 && (
+                          <div className="small" style={{ color: "var(--warn, #d97a5c)" }}>
+                            일지 빈칸 {e.blankDays}일
+                          </div>
+                        )}
                       </td>
                       <td>{e.attendanceDays}일</td>
                       <td>{e.hoursWorked}h</td>

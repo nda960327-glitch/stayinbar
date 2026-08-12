@@ -1,5 +1,6 @@
 import type {
   AppConfig,
+  DailyLog,
   Employee,
   EmployeeReport,
   LogRow,
@@ -146,10 +147,20 @@ export function computeMonthly(
   // 시트에서 합산한 해당 월의 총 재료비+주류비
   const sheetMaterialCost = monthRows.reduce((sum, r) => sum + (r.materialCost || 0), 0);
 
+  // 업무일지 칸 이름은 시트마다 조금씩 달라서 이름에 든 낱말로 찾습니다
+  // '특별히 빛나는 성과'는 감점 항목도 함께 적히는 칸이라 잘한 점으로 합치지 않고 그대로 둡니다
+  const isGoodCol = (k: string) => /잘한|잘 한/.test(k);
+  const isImproveCol = (k: string) => /개선|아쉬운|보완/.test(k);
+  const pickText = (texts: Record<string, string>, match: (k: string) => boolean) =>
+    Object.entries(texts)
+      .filter(([k, v]) => match(k) && String(v).trim())
+      .map(([, v]) => String(v).trim())
+      .join("\n");
+
   // 직원별 집계
   const byEmp = new Map<
     string,
-    { dates: Set<string>; score: number; texts: string[]; totalHours: number }
+    { dates: Set<string>; score: number; texts: string[]; totalHours: number; logs: DailyLog[] }
   >();
   const unmatched = new Set<string>();
 
@@ -162,7 +173,7 @@ export function computeMonthly(
     if (emp.role === "owner") continue; // 사장은 급여/인센티브 대상 제외
     let agg = byEmp.get(emp.id);
     if (!agg) {
-      agg = { dates: new Set(), score: 0, texts: [], totalHours: 0 };
+      agg = { dates: new Set(), score: 0, texts: [], totalHours: 0, logs: [] };
       byEmp.set(emp.id, agg);
     }
     if (r.date) agg.dates.add(r.date);
@@ -171,6 +182,19 @@ export function computeMonthly(
     for (const [k, v] of Object.entries(r.texts)) {
       if (v && v.length > 1) agg.texts.push(`[${k}] ${v}`);
     }
+
+    // 그날 일지 원문 (누가 어떤 날을 비워뒀는지 보이게)
+    const good = pickText(r.texts, isGoodCol);
+    const improve = pickText(r.texts, isImproveCol);
+    agg.logs.push({
+      date: r.date,
+      good,
+      improve,
+      extras: Object.entries(r.texts)
+        .filter(([k, v]) => !isGoodCol(k) && !isImproveCol(k) && String(v).trim())
+        .map(([k, v]) => ({ label: k, text: String(v).trim() })),
+      blank: !good && !improve,
+    });
   }
 
   const totalScore = Array.from(byEmp.values()).reduce((a, b) => a + b.score, 0);
@@ -185,7 +209,8 @@ export function computeMonthly(
   const reports: EmployeeReport[] = [];
   for (const emp of config.employees) {
     if (emp.role === "owner") continue;
-    const agg = byEmp.get(emp.id) ?? { dates: new Set<string>(), score: 0, texts: [], totalHours: 0 };
+    const agg = byEmp.get(emp.id) ?? { dates: new Set<string>(), score: 0, texts: [], totalHours: 0, logs: [] };
+    const dailyLogs = [...agg.logs].sort((a, b) => a.date.localeCompare(b.date));
     const attendanceDays = agg.dates.size;
     const hoursWorked = agg.totalHours;
     const contributionRate = totalScore > 0 ? (agg.score / totalScore) * 100 : 0;
@@ -233,6 +258,8 @@ export function computeMonthly(
         bankAccount: emp.bankAccount,
       },
       texts: agg.texts,
+      dailyLogs,
+      blankDays: dailyLogs.filter((l) => l.blank).length,
       contract: emp.contract,
     });
   }

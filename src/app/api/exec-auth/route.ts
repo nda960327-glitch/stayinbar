@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   try {
     const { pin } = await req.json();
     const config = await getConfig();
-    const execPin = config.execPin ?? "5678";
+    const execPin = config.execPin ?? "240901";
     if (pin === execPin) {
       const res = NextResponse.json({ ok: true });
       res.cookies.set(SESSION_COOKIE, encodeSession({ id: "exec-user", name: "임원", role: "owner" }), {

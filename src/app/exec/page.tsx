@@ -185,7 +185,7 @@ export default function ExecPage() {
             </div>
             <div className="foot">
               목표 {wonShort(o.targetSales ?? 0)}원
-              {data.projection?.isPartial ? ` · 월말 예상 ${wonShort(data.projection.projectedSales)}원 (${pct((o.targetSales ?? 0) > 0 ? (data.projection.projectedSales / o.targetSales) * 100 : 0)})` : ""}
+              {data.projection?.isPartial ? ` · 월말 예상 ${wonShort(data.projection.projectedSales)}원 (목표의 ${pct((o.targetSales ?? 0) > 0 ? (data.projection.projectedSales / o.targetSales) * 100 : 0)})` : ""}
             </div>
           </div>
           <div className="stat">

@@ -180,7 +180,7 @@ export default function OwnerDashboard() {
               </div>
               <div className="foot">
                 목표 {wonShort(o.targetSales)}원
-                {proj?.isPartial ? ` · 월말 예상 ${wonShort(proj.projectedSales)}원 (${pct(o.targetSales > 0 ? (proj.projectedSales / o.targetSales) * 100 : 0)})` : ""}
+                {proj?.isPartial ? ` · 월말 예상 ${wonShort(proj.projectedSales)}원 (목표의 ${pct(o.targetSales > 0 ? (proj.projectedSales / o.targetSales) * 100 : 0)})` : ""}
               </div>
             </div>
             <div className="stat">

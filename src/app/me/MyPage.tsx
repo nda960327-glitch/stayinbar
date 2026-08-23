@@ -99,7 +99,7 @@ export default function MyPage() {
             </div>
             <div className="foot">
               목표 {wonShort(data.targetSales)}원
-              {data.projection?.isPartial ? ` · 월말 예상 ${wonShort(data.projection.projectedSales)}원` : ""}
+              {data.projection?.isPartial ? ` · 월말 예상 ${wonShort(data.projection.projectedSales)}원 (목표의 ${pct(data.targetSales > 0 ? (data.projection.projectedSales / data.targetSales) * 100 : 0)})` : ""}
             </div>
           </div>
           <div className="stat">

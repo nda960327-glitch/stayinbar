@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { won, wonShort, pct } from "@/lib/format";
 import type { ContractDefaults, EmployeeReport, MonthProjection, OwnerPnL } from "@/lib/types";
 import EmployeeDetail from "@/components/EmployeeDetail";
+import TargetProgress from "@/components/TargetProgress";
 import ChangePin from "./ChangePin";
 
 interface MyData {
@@ -92,16 +93,13 @@ export default function MyPage() {
             <div className="value accent">{wonShort(data.totalSales)}원</div>
             <div className="foot">{won(data.totalSales)}</div>
           </div>
-          <div className="stat">
-            <div className="label">목표 달성률</div>
-            <div className={`value ${data.targetAchievement >= 100 ? "green" : ""}`}>
-              {pct(data.targetAchievement)}
-            </div>
-            <div className="foot">
-              목표 {wonShort(data.targetSales)}원
-              {data.projection?.isPartial ? ` · 월말 예상 ${wonShort(data.projection.projectedSales)}원 (목표의 ${pct(data.targetSales > 0 ? (data.projection.projectedSales / data.targetSales) * 100 : 0)})` : ""}
-            </div>
-          </div>
+          <TargetProgress
+            totalSales={data.totalSales}
+            targetSales={data.targetSales}
+            achievement={data.targetAchievement}
+            projection={data.projection}
+            mine={data.me ? { projected: data.me.projectedIncentive ?? data.me.incentive, atTarget: data.me.incentiveAtTarget ?? 0, share: data.me.contributionRate } : undefined}
+          />
           <div className="stat">
             <div className="label">영업일수</div>
             <div className="value">{data.workingDays}일</div>

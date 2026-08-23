@@ -282,6 +282,29 @@ export function computeMonthly(
   const projectedPool3 = Math.round(projectedSales * config.incentivePool3Rate);
   const projectedPool2 = Math.round(projectedSales * config.incentivePool2Rate);
 
+  // 목표 달성 시 인센티브 풀 (동기부여 카드용) — 재료비는 지금까지의 매출 대비 비율로 가정
+  const materialRate = totalSales > 0 ? sheetMaterialCost / totalSales : 0;
+  let incentivePoolAtTarget = 0;
+  let pool2AtTarget = 0;
+  let pool3AtTarget = 0;
+  if (targetSales > 0) {
+    if (useProfitShare) {
+      const profitAtTarget =
+        targetSales -
+        projectedPayroll -
+        config.fixedCost -
+        Math.round(targetSales * materialRate) -
+        Math.round(targetSales * config.vatRate) -
+        Math.round(targetSales * 0.02) -
+        vc.marketing;
+      incentivePoolAtTarget = Math.max(0, Math.round(profitAtTarget * profitRate));
+    } else {
+      pool2AtTarget = Math.round(targetSales * config.incentivePool2Rate);
+      pool3AtTarget = Math.round(targetSales * config.incentivePool3Rate);
+      incentivePoolAtTarget = pool2AtTarget + pool3AtTarget;
+    }
+  }
+
   const reports: EmployeeReport[] = [];
   for (const emp of config.employees) {
     if (emp.role === "owner") continue;
@@ -315,6 +338,14 @@ export function computeMonthly(
         projectedIncentive += Math.round(projectedPool3 / pool3Recipients.length);
       }
     }
+    // 목표 매출 달성 시 내 인센티브 (기여율은 지금 비율 유지 가정)
+    let incentiveAtTarget = 0;
+    if (useProfitShare) {
+      incentiveAtTarget = totalScore > 0 ? Math.round(incentivePoolAtTarget * (agg.score / totalScore)) : 0;
+    } else {
+      incentiveAtTarget = totalScore > 0 ? Math.round(pool2AtTarget * (agg.score / totalScore)) : 0;
+      if (emp.getsPool3 && pool3Recipients.length > 0) incentiveAtTarget += Math.round(pool3AtTarget / pool3Recipients.length);
+    }
     const projectedBaseSalary = baseSalaryOf(emp, hoursWorked * (emp.employmentType === "hourly" ? scale : 1));
     const projectedGrossPay = projectedBaseSalary + projectedIncentive;
 
@@ -339,6 +370,7 @@ export function computeMonthly(
       incentive,
       projectedIncentive,
       projectedGrossPay,
+      incentiveAtTarget,
       grossPay,
       takeHome,
       takeHome33,
@@ -361,6 +393,14 @@ export function computeMonthly(
   const netProfit = profitBeforeIncentive - totalIncentive;
 
   const projectedIncentivePool = reports.reduce((a, b) => a + b.projectedIncentive, 0);
+
+  // 목표 달성 관련: 남은 날, 하루 필요 매출
+  const remainingDays = Math.max(0, daysInMonth - elapsedDays);
+  const remainingWorkingDays = Math.max(0, projectedWorkingDays - workingDays);
+  const gapToTarget = Math.max(0, targetSales - totalSales);
+  const neededPerDay = gapToTarget === 0 ? 0 : remainingWorkingDays > 0 ? Math.round(gapToTarget / remainingWorkingDays) : gapToTarget;
+  const currentPerDay = workingDays > 0 ? Math.round(totalSales / workingDays) : 0;
+
   const projection: MonthProjection = {
     isPartial,
     daysInMonth,
@@ -371,6 +411,11 @@ export function computeMonthly(
     projectedProfitBeforeIncentive,
     projectedIncentivePool,
     projectedNetProfit: projectedProfitBeforeIncentive - projectedIncentivePool,
+    remainingDays,
+    remainingWorkingDays,
+    neededPerDay,
+    currentPerDay,
+    incentivePoolAtTarget,
   };
 
   const owner: OwnerPnL = {

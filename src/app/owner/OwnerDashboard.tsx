@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { won, wonShort, pct } from "@/lib/format";
 import type { ContractDefaults, EmployeeReport, MonthlyResult } from "@/lib/types";
 import EmployeeDetail from "@/components/EmployeeDetail";
+import TargetProgress from "@/components/TargetProgress";
 
 type OwnerData = MonthlyResult & {
   businessName: string;
@@ -173,16 +174,12 @@ export default function OwnerDashboard() {
               <div className="value accent">{wonShort(o.totalSales)}원</div>
               <div className="foot">{won(o.totalSales)} · 누르면 일일 매출</div>
             </div>
-            <div className="stat">
-              <div className="label">목표 달성률</div>
-              <div className={`value ${o.targetAchievement >= 100 ? "green" : ""}`}>
-                {pct(o.targetAchievement)}
-              </div>
-              <div className="foot">
-                목표 {wonShort(o.targetSales)}원
-                {proj?.isPartial ? ` · 월말 예상 ${wonShort(proj.projectedSales)}원 (목표의 ${pct(o.targetSales > 0 ? (proj.projectedSales / o.targetSales) * 100 : 0)})` : ""}
-              </div>
-            </div>
+            <TargetProgress
+              totalSales={o.totalSales}
+              targetSales={o.targetSales}
+              achievement={o.targetAchievement}
+              projection={proj}
+            />
             <div className="stat">
               <div className="label">영업일수</div>
               <div className="value">{o.workingDays}일</div>

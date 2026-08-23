@@ -142,6 +142,7 @@ export interface EmployeeReport {
   incentive: number;            // 현재까지 데이터 기준 인센티브
   projectedIncentive: number;   // 월말 예상매출·예상순이익 기준 예상 인센티브
   projectedGrossPay: number;    // 예상 급여(월말) + 예상 인센티브 (세전)
+  incentiveAtTarget: number;    // 월 목표 매출을 달성했을 때 내 예상 인센티브
   grossPay: number; // 급여 + 인센티브 (세전)
   takeHome: TakeHome;
   takeHome33: TakeHome;
@@ -200,6 +201,12 @@ export interface MonthProjection {
   projectedProfitBeforeIncentive: number;
   projectedIncentivePool: number; // 전 직원 예상 인센티브 합계
   projectedNetProfit: number;
+  // 목표 달성 관련 (동기부여 카드용)
+  remainingDays: number;          // 이달 남은 달력일
+  remainingWorkingDays: number;   // 남은 예상 영업일
+  neededPerDay: number;           // 남은 영업일 동안 하루 얼마면 목표 달성 (0이면 이미 달성)
+  currentPerDay: number;          // 지금까지 영업일 평균 매출
+  incentivePoolAtTarget: number;  // 목표 매출 달성 시 예상 인센티브 풀(전 직원 합계)
 }
 
 export interface MonthlyResult {

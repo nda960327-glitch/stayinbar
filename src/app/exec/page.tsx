@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { won, wonShort, pct } from "@/lib/format";
 import type { MonthlyResult, Notice } from "@/lib/types";
 import NoticeBoard from "@/components/NoticeBoard";
+import TargetProgress from "@/components/TargetProgress";
 
 import TopBar from "@/components/TopBar";
 
@@ -178,16 +179,12 @@ export default function ExecPage() {
             <div className="value accent">{wonShort(o.totalSales ?? 0)}원</div>
             <div className="foot">{won(o.totalSales ?? 0)}</div>
           </div>
-          <div className="stat">
-            <div className="label">목표 달성률</div>
-            <div className={`value ${(o.targetAchievement ?? 0) >= 100 ? "green" : ""}`}>
-              {pct(o.targetAchievement ?? 0)}
-            </div>
-            <div className="foot">
-              목표 {wonShort(o.targetSales ?? 0)}원
-              {data.projection?.isPartial ? ` · 월말 예상 ${wonShort(data.projection.projectedSales)}원 (목표의 ${pct((o.targetSales ?? 0) > 0 ? (data.projection.projectedSales / o.targetSales) * 100 : 0)})` : ""}
-            </div>
-          </div>
+          <TargetProgress
+            totalSales={o.totalSales ?? 0}
+            targetSales={o.targetSales ?? 0}
+            achievement={o.targetAchievement ?? 0}
+            projection={data.projection}
+          />
           <div className="stat">
             <div className="label">영업일수</div>
             <div className="value">{o.workingDays ?? 0}일</div>

@@ -477,3 +477,49 @@ select:focus {
   white-space: pre-line;
   color: var(--text, inherit);
 }
+
+/* ── 목표 달성 카드 ── */
+.target-card .target-bar {
+  position: relative;
+  height: 10px;
+  margin-top: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.target-card .target-bar-proj {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: rgba(212, 169, 74, 0.28);
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+.target-card .target-bar-now {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+.target-card .target-bar-now.done {
+  background: linear-gradient(90deg, var(--green), #9be3ab);
+}
+.target-card .target-bar-goal {
+  position: absolute; right: 0; top: -2px; bottom: -2px; width: 2px;
+  background: var(--muted);
+}
+.target-card .target-scale {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.target-card .target-msg {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.target-card .target-msg.green { color: var(--green); }
+.target-card .target-msg.accent { color: var(--accent-2); }

@@ -48,30 +48,35 @@ export default function TargetProgress({
 
   return (
     <div className="stat target-card">
-      <div className="label">목표 달성률</div>
-      <div className="row" style={{ alignItems: "baseline", gap: 8 }}>
-        <div className={`value ${done ? "green" : ""}`}>{pct(achievement)}</div>
-        {partial && p && !done && (
-          <span className="small muted">월말 예상 {pct(projPct)}</span>
-        )}
-      </div>
-
-      {/* 진행 바: 실선 = 지금까지, 연한 부분 = 월말 예상, 끝 = 목표 */}
-      <div className="target-bar" title={`현재 ${pct(achievement)} · 예상 ${pct(projPct)}`}>
-        <div className="target-bar-proj" style={{ width: `${projClamped}%` }} />
-        <div className={`target-bar-now ${done ? "done" : ""}`} style={{ width: `${cur}%` }} />
-        <div className="target-bar-goal" />
-      </div>
-      <div className="target-scale">
-        <span>{wonShort(totalSales)}원</span>
-        {partial && p && !done && <span>예상 {wonShort(p.projectedSales)}원</span>}
-        <span>목표 {wonShort(targetSales)}원</span>
+      <div className="target-head">
+        <div className="target-num">
+          <div className="label">목표 달성률 <span className="muted">· {wonShort(targetSales)}원 목표</span></div>
+          <div className="row" style={{ alignItems: "baseline", gap: 10 }}>
+            <div className={`value ${done ? "green" : ""}`}>{pct(achievement)}</div>
+            {partial && p && !done && (
+              <span className="small muted">월말 예상 <strong>{pct(projPct)}</strong></span>
+            )}
+          </div>
+        </div>
+        <div className="target-bar-wrap">
+          {/* 진행 바: 실선 = 지금까지, 연한 부분 = 월말 예상, 끝 = 목표 */}
+          <div className="target-bar" title={`현재 ${pct(achievement)} · 예상 ${pct(projPct)}`}>
+            <div className="target-bar-proj" style={{ width: `${projClamped}%` }} />
+            <div className={`target-bar-now ${done ? "done" : ""}`} style={{ width: `${cur}%` }} />
+            <div className="target-bar-goal" />
+          </div>
+          <div className="target-scale">
+            <span>현재 {wonShort(totalSales)}원</span>
+            {partial && p && !done && <span>월말 예상 {wonShort(p.projectedSales)}원</span>}
+            <span>목표 {wonShort(targetSales)}원</span>
+          </div>
+        </div>
       </div>
 
       {headline && <div className={`target-msg ${tone}`}>{headline}</div>}
 
       {poolAtTarget > 0 && (
-        <div className="foot" style={{ marginTop: 6 }}>
+        <div className="foot target-foot">
           {mine ? (
             <>
               목표 달성 시 내 예상 인센티브 <strong>{won(mine.atTarget)}</strong>

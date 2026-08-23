@@ -479,10 +479,30 @@ select:focus {
 }
 
 /* ── 목표 달성 카드 ── */
+.target-card {
+  margin-top: 14px;
+  padding: 16px 18px;
+}
+.target-card .target-head {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.target-card .target-num {
+  flex: 0 0 auto;
+  min-width: 150px;
+}
+.target-card .target-num .label { margin-bottom: 2px; }
+.target-card .target-num .value { font-size: 28px; }
+.target-card .target-bar-wrap {
+  flex: 1 1 260px;
+  min-width: 200px;
+}
 .target-card .target-bar {
   position: relative;
-  height: 10px;
-  margin-top: 10px;
+  height: 14px;
+  margin-top: 4px;
   background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -511,15 +531,25 @@ select:focus {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
-  margin-top: 4px;
+  margin-top: 6px;
 }
 .target-card .target-msg {
-  margin-top: 8px;
-  font-size: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.5;
+}
+.target-card .target-foot {
+  margin-top: 4px;
+  font-size: 12px;
+}
+@media (max-width: 720px) {
+  .target-card .target-head { gap: 10px; }
+  .target-card .target-num .value { font-size: 24px; }
 }
 .target-card .target-msg.green { color: var(--green); }
 .target-card .target-msg.accent { color: var(--accent-2); }

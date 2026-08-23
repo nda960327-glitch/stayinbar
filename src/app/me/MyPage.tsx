@@ -87,24 +87,26 @@ export default function MyPage() {
         <h2>
           이번달 매장 매출 <span className="sub">{month}</span>
         </h2>
-        <div className="grid cols-3">
+        <div className="grid cols-2">
           <div className="stat">
             <div className="label">월 총매출</div>
             <div className="value accent">{wonShort(data.totalSales)}원</div>
             <div className="foot">{won(data.totalSales)}</div>
           </div>
-          <TargetProgress
-            totalSales={data.totalSales}
-            targetSales={data.targetSales}
-            achievement={data.targetAchievement}
-            projection={data.projection}
-            mine={data.me ? { projected: data.me.projectedIncentive ?? data.me.incentive, atTarget: data.me.incentiveAtTarget ?? 0, share: data.me.contributionRate } : undefined}
-          />
           <div className="stat">
             <div className="label">영업일수</div>
             <div className="value">{data.workingDays}일</div>
           </div>
         </div>
+
+        {/* 목표 달성 카드 — 전체 너비 */}
+        <TargetProgress
+          totalSales={data.totalSales}
+          targetSales={data.targetSales}
+          achievement={data.targetAchievement}
+          projection={data.projection}
+          mine={data.me ? { projected: data.me.projectedIncentive ?? data.me.incentive, atTarget: data.me.incentiveAtTarget ?? 0, share: data.me.contributionRate } : undefined}
+        />
       </div>
 
       {/* 내 리포트 */}

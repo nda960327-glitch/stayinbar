@@ -173,18 +173,12 @@ export default function ExecPage() {
         <NoticeBoard notices={data.notices} />
 
         {/* KPI Cards */}
-        <div className="grid cols-4">
+        <div className="grid cols-3">
           <div className="stat">
             <div className="label">월 총매출</div>
             <div className="value accent">{wonShort(o.totalSales ?? 0)}원</div>
             <div className="foot">{won(o.totalSales ?? 0)}</div>
           </div>
-          <TargetProgress
-            totalSales={o.totalSales ?? 0}
-            targetSales={o.targetSales ?? 0}
-            achievement={o.targetAchievement ?? 0}
-            projection={data.projection}
-          />
           <div className="stat">
             <div className="label">영업일수</div>
             <div className="value">{o.workingDays ?? 0}일</div>
@@ -200,6 +194,14 @@ export default function ExecPage() {
             <div className="foot">{won(o.netProfit ?? 0)}</div>
           </div>
         </div>
+
+        {/* 목표 달성 카드 — 전체 너비 */}
+        <TargetProgress
+          totalSales={o.totalSales ?? 0}
+          targetSales={o.targetSales ?? 0}
+          achievement={o.targetAchievement ?? 0}
+          projection={data.projection}
+        />
 
         {/* P&L */}
         <div className="card mt">

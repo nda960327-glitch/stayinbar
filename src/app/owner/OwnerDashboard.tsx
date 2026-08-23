@@ -163,7 +163,7 @@ export default function OwnerDashboard() {
       {hasData && (
         <>
           {/* 핵심 지표 */}
-          <div className="grid cols-4">
+          <div className="grid cols-3">
             <div
               className="stat"
               onClick={() => setShowDaily(!showDaily)}
@@ -174,12 +174,6 @@ export default function OwnerDashboard() {
               <div className="value accent">{wonShort(o.totalSales)}원</div>
               <div className="foot">{won(o.totalSales)} · 누르면 일일 매출</div>
             </div>
-            <TargetProgress
-              totalSales={o.totalSales}
-              targetSales={o.targetSales}
-              achievement={o.targetAchievement}
-              projection={proj}
-            />
             <div className="stat">
               <div className="label">영업일수</div>
               <div className="value">{o.workingDays}일</div>
@@ -193,6 +187,14 @@ export default function OwnerDashboard() {
               <div className="foot">{won(o.netProfit)}</div>
             </div>
           </div>
+
+          {/* 목표 달성 카드 — 전체 너비 */}
+          <TargetProgress
+            totalSales={o.totalSales}
+            targetSales={o.targetSales}
+            achievement={o.targetAchievement}
+            projection={proj}
+          />
 
           {/* 일일 매출 (월 총매출 타일 클릭 시) */}
           {showDaily && (

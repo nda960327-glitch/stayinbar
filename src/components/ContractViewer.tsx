@@ -168,7 +168,7 @@ export default function ContractViewer({ emp, businessName, isOwner, incentiveCl
           <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px dashed #ddd" }}>
             <div style={{ fontWeight: "bold", marginBottom: 4 }}>제 4 조 【소정근로시간】</div>
             <p>시업 <Blank v={c.workStartTime} /> ~ 종업 <Blank v={c.workEndTime} />
-              &nbsp;(휴게: <Blank v={c.breakMinutes ? `${c.breakMinutes}분` : undefined} />)</p>
+              &nbsp;(휴게: <strong>{c.breakMinutes || 60}분</strong>)</p>
             <p>근무일: <Blank v={c.workDays} /> &nbsp; 주휴일: <Blank v={c.weeklyRestDay} /></p>
           </div>
 

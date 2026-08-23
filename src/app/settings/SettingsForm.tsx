@@ -504,6 +504,7 @@ export default function SettingsForm() {
                     if (!c.ownerName && config?.ownerName) patch.ownerName = config.ownerName;
                     if (!c.jobDescription && config?.defaultJobDescription) patch.jobDescription = config.defaultJobDescription;
                     if (!c.paymentMethod) patch.paymentMethod = "계좌이체";
+                    if (!c.breakMinutes) patch.breakMinutes = 60;
                     if (Object.keys(patch).length) setEmp(idx, { contract: { ...c, ...patch } });
                   }
                   setOpenContract(opening ? e.id : null);

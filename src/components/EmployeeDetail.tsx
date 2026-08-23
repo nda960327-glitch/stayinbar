@@ -26,13 +26,36 @@ export default function EmployeeDetail({
   isOwner,
   projection,
   pnl,
+  onUpdated,
 }: {
   emp: EmployeeReport;
   month: string;
   isOwner: boolean;
   projection?: MonthProjection;   // 월말 예상 (매출·순이익·인센티브 풀)
   pnl?: Pick<OwnerPnL, "incentiveMode" | "incentiveRate">; // 이 달의 인센티브 방식
+  onUpdated?: () => void;          // 본인 설정(세금 방식 등)을 바꾼 뒤 다시 불러오기
 }) {
+  const [taxSaving, setTaxSaving] = useState(false);
+  const [taxMsg, setTaxMsg] = useState("");
+  async function saveTaxMode(mode: "3.3" | "4insurance") {
+    setTaxSaving(true);
+    setTaxMsg("");
+    try {
+      const res = await fetch("/api/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taxMode: mode }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) { setTaxMsg("❌ " + (json.error ?? "저장 실패")); return; }
+      setTaxMsg(`✅ ${mode === "3.3" ? "3.3% 원천징수" : "4대보험"}로 저장했습니다. 급여·계약서에 반영됩니다.`);
+      onUpdated?.();
+    } catch {
+      setTaxMsg("❌ 네트워크 오류");
+    } finally {
+      setTaxSaving(false);
+    }
+  }
   const projIncentive = emp.projectedIncentive ?? emp.incentive;
   const isPartial = !!projection?.isPartial;
   const ratePct = Math.round((pnl?.incentiveRate ?? 0) * 100);
@@ -194,6 +217,22 @@ export default function EmployeeDetail({
         <p className="muted small mt-s">
           ※ 소득세는 부양가족 등 개인 조건에 따라 달라지므로 추정치입니다.
         </p>
+        {!isOwner && (
+          <div className="notice mt-s" style={{ lineHeight: 1.7 }}>
+            <strong>세금 처리 방식은 본인이 정합니다.</strong>{" "}
+            <span className="small">
+              현재 내 방식: <strong>{emp.takeHome?.mode === "3.3" ? "3.3% 원천징수" : "4대보험"}</strong>.
+              위에서 두 방식의 실수령액을 비교해 보고 아래 버튼으로 확정하세요. 바꾸면 급여 계산과 근로계약서에 바로 반영됩니다.
+            </span>
+            <div className="row" style={{ marginTop: 8 }}>
+              <button className="btn sm" type="button" disabled={taxSaving || viewTaxMode === emp.takeHome?.mode} onClick={() => saveTaxMode(viewTaxMode)}>
+                {taxSaving ? "저장 중…" : `${viewTaxMode === "3.3" ? "3.3% 원천징수" : "4대보험"}로 확정`}
+              </button>
+              {viewTaxMode === emp.takeHome?.mode && <span className="small muted">지금 보고 있는 방식이 현재 설정입니다.</span>}
+            </div>
+            {taxMsg && <p className="small" style={{ marginTop: 6 }}>{taxMsg}</p>}
+          </div>
+        )}
       </div>
 
       {/* 개인정보 */}

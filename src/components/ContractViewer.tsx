@@ -20,8 +20,8 @@ function SignLine({ signature, signed, signedAt }: { signature?: string; signed?
     );
   }
   return (
-    <p style={{ marginTop: 8, color: signed ? "green" : "#999" }}>
-      서 &nbsp; &nbsp; 명: {signed ? "✅ 서명 완료" : "_____________________(인)"}
+    <p style={{ marginTop: 8, color: "#999" }}>
+      서 &nbsp; &nbsp; 명: _____________________(인)
     </p>
   );
 }
@@ -52,15 +52,16 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
   const [signing, setSigning] = useState<Party | null>(null);
   const [saving, setSaving] = useState(false);
   const [signMsg, setSignMsg] = useState("");
+  const [agreed, setAgreed] = useState(false);
 
-  async function submitSign(party: Party, signature?: string, action: "sign" | "clear" = "sign") {
+  async function submitSign(party: Party, signature?: string, action: "sign" | "clear" = "sign", useStored = false) {
     setSaving(true);
     setSignMsg("");
     try {
       const res = await fetch("/api/contract/sign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employeeId: emp.id, party, signature, action }),
+        body: JSON.stringify({ employeeId: emp.id, party, signature, action, useStored }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -69,6 +70,7 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
       }
       setContract(json.contract ?? {});
       setSigning(null);
+      setAgreed(false);
       setSignMsg(action === "clear" ? "서명을 지웠습니다. 다시 서명을 받을 수 있습니다." : "✅ 서명이 저장되었습니다.");
     } catch {
       setSignMsg("❌ 네트워크 오류");
@@ -80,7 +82,7 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
   const maskedRrn = emp.personal?.rrn
     ? emp.personal.rrn.replace(/^(\d{6})-?(\d)(\d{5,6})$/, "$1-$2******")
     : null;
-  const taxModeLabel = emp.takeHome?.mode === "3.3" ? "3.3% 원천징수" : "4대보험 가입";
+  const taxModeLabel = (emp.takeHome?.mode === "3.3" ? "3.3% 원천징수" : "4대보험 가입") + " (근로자 본인 선택)";
 
   function handlePrint() {
     const el = document.getElementById("contract-print-area");
@@ -240,23 +242,49 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
       {/* 전자서명 — 인쇄 영역 밖 */}
       {hasContract && (
         <div style={{ marginTop: 14 }}>
+          {/* 근로자(을) */}
           {!isOwner && (
             c.employeeSignature ? (
-              <p className="small muted">✅ 내 서명이 완료된 계약서입니다{c.employeeSignedAt ? ` (${c.employeeSignedAt})` : ""}. 위 인쇄 버튼으로 PDF로 보관하세요.</p>
+              <p className="small muted">
+                내 서명이 들어간 계약서입니다{c.employeeSignedAt ? ` (${c.employeeSignedAt} 서명)` : ""}. 위 인쇄 버튼으로 PDF로 보관하세요.
+              </p>
             ) : signing === "employee" ? (
-              <SignaturePad
-                label="아래 칸에 손가락이나 마우스로 이름을 서명해 주세요. 내용을 확인했고 계약에 동의한다는 뜻입니다."
-                onSave={(sig) => submitSign("employee", sig)}
-                onCancel={() => setSigning(null)}
-                saving={saving}
-              />
+              <div className="notice" style={{ lineHeight: 1.7 }}>
+                <strong>위 근로계약 내용에 동의합니까?</strong>
+                <label className="row" style={{ gap: 8, marginTop: 8, alignItems: "flex-start" }}>
+                  <input
+                    type="checkbox"
+                    style={{ width: "auto", marginTop: 4 }}
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                  />
+                  <span className="small">
+                    네, 계약기간·근무장소·업무·근로시간·임금·휴일 등 위 내용을 모두 읽었고 이에 동의합니다.
+                    아래 서명은 본인의 서명이며, 종이 계약서에 하는 서명과 같은 효력을 갖는 데 동의합니다.
+                  </span>
+                </label>
+                {agreed ? (
+                  <SignaturePad
+                    label="아래 칸에 손가락이나 마우스로 평소 쓰는 서명을 해주세요. 저장하면 위 계약서 '근로자(을)' 서명란에 그대로 들어갑니다."
+                    onSave={(sig) => submitSign("employee", sig)}
+                    onCancel={() => { setSigning(null); setAgreed(false); }}
+                    saving={saving}
+                  />
+                ) : (
+                  <div className="row" style={{ marginTop: 8 }}>
+                    <span className="small muted">동의에 체크하면 서명란이 열립니다.</span>
+                    <button className="btn ghost sm" type="button" onClick={() => setSigning(null)}>취소</button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button className="btn" type="button" onClick={() => setSigning("employee")}>
-                ✍️ 근로자(을) 서명하기
+                ✍️ 계약 내용 확인하고 서명하기
               </button>
             )
           )}
 
+          {/* 사장(갑) */}
           {isOwner && (
             <div className="row" style={{ gap: 8 }}>
               {c.ownerSignature ? (
@@ -264,9 +292,14 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
                   갑 서명 지우기
                 </button>
               ) : signing === "owner" ? null : (
-                <button className="btn sm" type="button" onClick={() => setSigning("owner")}>
-                  ✍️ 사용자(갑) 서명하기
-                </button>
+                <>
+                  <button className="btn sm" type="button" disabled={saving} onClick={() => submitSign("owner", undefined, "sign", true)}>
+                    ✍️ 등록된 내 서명으로 갑 서명
+                  </button>
+                  <button className="btn ghost sm" type="button" onClick={() => setSigning("owner")}>
+                    직접 그려서 서명
+                  </button>
+                </>
               )}
               {c.employeeSignature && (
                 <button className="btn ghost sm" type="button" disabled={saving} onClick={() => {
@@ -276,7 +309,7 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
                 </button>
               )}
               {!c.employeeSignature && (
-                <span className="small muted">근로자 서명은 {emp.name} 님이 본인 계정으로 로그인해 "내 리포트 → 근로계약서"에서 합니다.</span>
+                <span className="small muted">근로자 서명은 {emp.name} 님이 본인 계정으로 로그인해 "내 리포트 → 근로계약서"에서 동의 후 직접 합니다.</span>
               )}
             </div>
           )}

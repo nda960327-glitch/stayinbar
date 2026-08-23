@@ -19,7 +19,8 @@ export async function POST(req: Request) {
   const employeeId = String(body.employeeId ?? "");
   const party = body.party === "owner" ? "owner" : "employee";
   const action = body.action === "clear" ? "clear" : "sign";
-  const signature = typeof body.signature === "string" ? body.signature : "";
+  let signature = typeof body.signature === "string" ? body.signature : "";
+  const useStored = body.useStored === true; // 설정에 등록된 사업주 서명 이미지 사용
 
   // 권한 확인
   if (party === "owner" && session.role !== "owner") {
@@ -31,8 +32,15 @@ export async function POST(req: Request) {
   if (action === "clear" && session.role !== "owner") {
     return NextResponse.json({ error: "서명 삭제는 사장만 할 수 있습니다." }, { status: 403 });
   }
+  const config = await getConfig();
+  if (action === "sign" && party === "owner" && useStored) {
+    if (!config.ownerSignature) {
+      return NextResponse.json({ error: "설정에 등록된 사업주 서명이 없습니다. 설정 → 사업주 서명에서 등록하거나 '직접 그려서 서명'을 눌러 주세요." }, { status: 400 });
+    }
+    signature = config.ownerSignature;
+  }
   if (action === "sign") {
-    if (!signature.startsWith("data:image/png;base64,") || signature.length < 200) {
+    if (!signature.startsWith("data:image/") || signature.length < 200) {
       return NextResponse.json({ error: "서명 이미지가 없습니다. 서명란에 서명을 그려주세요." }, { status: 400 });
     }
     if (signature.length > MAX_SIG_LEN) {
@@ -40,7 +48,6 @@ export async function POST(req: Request) {
     }
   }
 
-  const config = await getConfig();
   const idx = config.employees.findIndex((e) => e.id === employeeId);
   if (idx === -1) {
     return NextResponse.json({ error: "직원을 찾을 수 없습니다." }, { status: 404 });

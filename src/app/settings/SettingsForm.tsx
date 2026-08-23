@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { AppConfig, Employee, Notice } from "@/lib/types";
 import { won } from "@/lib/format";
+import SignaturePad from "@/components/SignaturePad";
 
 function emptyEmployee(): Employee {
   return {
@@ -29,6 +30,31 @@ export default function SettingsForm() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [openContract, setOpenContract] = useState<string | null>(null);
+  const [drawOwnerSig, setDrawOwnerSig] = useState(false);
+
+  // 사업주 서명 이미지 업로드 → 가로 600px 이하 PNG data URL로 줄여서 저장
+  function onOwnerSigFile(file: File | undefined) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 600;
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        set("ownerSignature", canvas.toDataURL("image/png"));
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
 
   useEffect(() => {
     fetch("/api/config")
@@ -124,6 +150,49 @@ export default function SettingsForm() {
             <span className="cap">사업주 성명 (근로계약서 대표자 기본값)</span>
             <input value={config.ownerName ?? ""} onChange={(e) => set("ownerName", e.target.value)} placeholder="예: 노도아" />
           </label>
+          <label className="field" style={{ gridColumn: "1 / -1" }}>
+            <span className="cap">근로계약서 담당 업무 기본 문구</span>
+            <input value={config.defaultJobDescription ?? ""} onChange={(e) => set("defaultJobDescription", e.target.value)} placeholder="예: 바 운영 전반 업무 일체" />
+          </label>
+        </div>
+
+        {/* 사업주 서명 */}
+        <div style={{ marginTop: 14, padding: 14, background: "var(--bg-1)", borderRadius: 8 }}>
+          <div className="row spread">
+            <strong>✍️ 사업주 서명 (근로계약서 &quot;갑&quot; 서명에 사용)</strong>
+            {config.ownerSignature && (
+              <button className="btn ghost sm" type="button" onClick={() => set("ownerSignature", "")}>서명 삭제</button>
+            )}
+          </div>
+          <p className="muted small" style={{ marginTop: 4 }}>
+            한 번 등록해 두면 각 직원 계약서에서 &quot;등록된 내 서명으로 갑 서명&quot; 버튼 한 번으로 서명됩니다. 서명 이미지 파일(캡처 PNG/JPG)을 올리거나 아래에서 직접 그리세요. 등록 후 맨 아래 <strong>전체 저장</strong>.
+          </p>
+          {config.ownerSignature ? (
+            <div style={{ marginTop: 8, background: "#fff", display: "inline-block", padding: 6, borderRadius: 6 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={config.ownerSignature} alt="사업주 서명" style={{ height: 70, display: "block" }} />
+            </div>
+          ) : (
+            <p className="small" style={{ marginTop: 8, color: "var(--warn, #d97a5c)" }}>아직 등록된 서명이 없습니다.</p>
+          )}
+          <div className="row" style={{ marginTop: 10, gap: 10 }}>
+            <label className="btn ghost sm" style={{ cursor: "pointer" }}>
+              📎 서명 이미지 올리기
+              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => onOwnerSigFile(e.target.files?.[0])} />
+            </label>
+            <button className="btn ghost sm" type="button" onClick={() => setDrawOwnerSig((v) => !v)}>
+              {drawOwnerSig ? "그리기 닫기" : "✍️ 직접 그리기"}
+            </button>
+          </div>
+          {drawOwnerSig && (
+            <SignaturePad
+              label="평소 쓰는 서명을 그린 뒤 '이 서명으로 서명하기'를 누르면 위에 등록됩니다."
+              onSave={(sig) => { set("ownerSignature", sig); setDrawOwnerSig(false); }}
+              onCancel={() => setDrawOwnerSig(false)}
+            />
+          )}
+        </div>
+        <div className="grid cols-2" style={{ marginTop: 14 }}>
           <label className="field">
             <span className="cap">월 고정비 (원)</span>
             <input
@@ -424,6 +493,7 @@ export default function SettingsForm() {
                     if (!c.workLocation && config?.businessAddress) patch.workLocation = config.businessAddress;
                     if (!c.businessAddress && config?.businessAddress) patch.businessAddress = config.businessAddress;
                     if (!c.ownerName && config?.ownerName) patch.ownerName = config.ownerName;
+                    if (!c.jobDescription && config?.defaultJobDescription) patch.jobDescription = config.defaultJobDescription;
                     if (Object.keys(patch).length) setEmp(idx, { contract: { ...c, ...patch } });
                   }
                   setOpenContract(opening ? e.id : null);
@@ -497,16 +567,10 @@ export default function SettingsForm() {
                     <input value={e.contract?.ownerName ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, ownerName: ev.target.value } })} />
                   </label>
                 </div>
-                <div className="row mt" style={{ gap: 20 }}>
-                  <label className="row" style={{ gap: 8 }}>
-                    <input type="checkbox" style={{ width: "auto" }} checked={e.contract?.ownerSigned ?? false} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, ownerSigned: ev.target.checked } })} />
-                    <span className="small">사업주 서명 완료</span>
-                  </label>
-                  <label className="row" style={{ gap: 8 }}>
-                    <input type="checkbox" style={{ width: "auto" }} checked={e.contract?.employeeSigned ?? false} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, employeeSigned: ev.target.checked } })} />
-                    <span className="small">근로자 서명 완료</span>
-                  </label>
-                </div>
+                <p className="muted small mt">
+                  서명 상태 — 갑(사업주): {e.contract?.ownerSignature ? `서명됨 (${e.contract.ownerSignedAt ?? ""})` : "미서명"} · 을(근로자): {e.contract?.employeeSignature ? `서명됨 (${e.contract.employeeSignedAt ?? ""})` : "미서명"}
+                  <br />서명은 체크가 아니라 실제 서명으로만 됩니다: 갑은 대시보드 → 직원 상세 → 계약서에서, 을은 직원 본인이 로그인해 동의 후 서명합니다.
+                </p>
               </div>
             )}
           </div>

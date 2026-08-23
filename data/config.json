@@ -2,6 +2,7 @@
   "businessName": "STAY IN BAR",
   "businessAddress": "서울시 강남구 언주로98길 14, B1",
   "ownerName": "노도아",
+  "defaultJobDescription": "바 운영 전반 업무 일체 (음료 제조 및 서빙, 재고 관리·발주, 매장 청소 및 정리, 고객 응대 등 바에서 필요한 모든 업무)",
   "fixedCost": 3500000,
   "dailyTarget": 1500000,
   "monthlyTarget": 18000000,

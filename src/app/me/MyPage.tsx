@@ -109,7 +109,7 @@ export default function MyPage() {
 
       {/* 내 리포트 */}
       {data.me ? (
-        <EmployeeDetail emp={data.me} month={month} isOwner={false} projection={data.projection} pnl={data.pnl} />
+        <EmployeeDetail emp={data.me} month={month} isOwner={false} projection={data.projection} pnl={data.pnl} onUpdated={() => load(month)} />
       ) : (
         <div className="card mt">
           <div className="notice">

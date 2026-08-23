@@ -124,6 +124,7 @@ async function withDefaults(stored: AppConfig): Promise<AppConfig> {
   if (typeof stored.monthlyTarget !== "number") merged.monthlyTarget = bundled.monthlyTarget;
   if (!stored.businessAddress) merged.businessAddress = bundled.businessAddress;
   if (!stored.ownerName) merged.ownerName = bundled.ownerName;
+  if (!stored.defaultJobDescription) merged.defaultJobDescription = bundled.defaultJobDescription;
   return merged;
 }
 

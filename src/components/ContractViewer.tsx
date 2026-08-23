@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { won } from "@/lib/format";
-import type { EmployeeReport, EmploymentContract } from "@/lib/types";
+import type { ContractDefaults, EmployeeReport, EmploymentContract } from "@/lib/types";
 import SignaturePad from "@/components/SignaturePad";
 
 type Party = "owner" | "employee";
@@ -31,6 +31,7 @@ interface Props {
   businessName: string;
   isOwner?: boolean;
   incentiveClause?: string; // 【인센티브】 조항 문구 (서버에서 설정값으로 생성)
+  defaults?: ContractDefaults; // 칸이 비어 있을 때 보여줄 매장 기본값
 }
 
 function Blank({ v }: { v?: string | number | null }) {
@@ -44,7 +45,7 @@ function Blank({ v }: { v?: string | number | null }) {
   return <strong>{v}</strong>;
 }
 
-export default function ContractViewer({ emp, businessName, isOwner, incentiveClause }: Props) {
+export default function ContractViewer({ emp, businessName, isOwner, incentiveClause, defaults }: Props) {
   // 서명하면 새로고침 없이 바로 반영되도록 계약 내용을 상태로 들고 있습니다
   const [contract, setContract] = useState<Partial<EmploymentContract>>(emp.contract ?? {});
   useEffect(() => { setContract(emp.contract ?? {}); }, [emp.id, emp.contract]);
@@ -155,13 +156,13 @@ export default function ContractViewer({ emp, businessName, isOwner, incentiveCl
           {/* 제2조 */}
           <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px dashed #ddd" }}>
             <div style={{ fontWeight: "bold", marginBottom: 4 }}>제 2 조 【근무 장소】</div>
-            <p><Blank v={c.workLocation} /></p>
+            <p><Blank v={c.workLocation || defaults?.businessAddress} /></p>
           </div>
 
           {/* 제3조 */}
           <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px dashed #ddd" }}>
             <div style={{ fontWeight: "bold", marginBottom: 4 }}>제 3 조 【업무 내용】</div>
-            <p><Blank v={c.jobDescription || emp.position} /></p>
+            <p><Blank v={c.jobDescription || defaults?.jobDescription || emp.position} /></p>
           </div>
 
           {/* 제4조 */}
@@ -234,8 +235,8 @@ export default function ContractViewer({ emp, businessName, isOwner, incentiveCl
             <div style={{ border: "1px solid #ccc", padding: 14, borderRadius: 6 }}>
               <p style={{ fontWeight: "bold", marginBottom: 8 }}>사용자 (갑)</p>
               <p>사 업 장: {businessName}</p>
-              <p>주 &nbsp; &nbsp; 소: <Blank v={c.businessAddress} /></p>
-              <p>대 표 자: <Blank v={c.ownerName} /></p>
+              <p>주 &nbsp; &nbsp; 소: <Blank v={c.businessAddress || defaults?.businessAddress} /></p>
+              <p>대 표 자: <Blank v={c.ownerName || defaults?.ownerName} /></p>
               <SignLine signature={c.ownerSignature} signed={c.ownerSigned} signedAt={c.ownerSignedAt} />
             </div>
             <div style={{ border: "1px solid #ccc", padding: 14, borderRadius: 6 }}>
@@ -324,7 +325,7 @@ export default function ContractViewer({ emp, businessName, isOwner, incentiveCl
           )}
           {isOwner && signing === "owner" && (
             <SignaturePad
-              label={`사용자(갑) 서명 — ${c.ownerName || businessName} 대표`}
+              label={`사용자(갑) 서명 — ${c.ownerName || defaults?.ownerName || businessName} 대표`}
               onSave={(sig) => submitSign("owner", sig)}
               onCancel={() => setSigning(null)}
               saving={saving}

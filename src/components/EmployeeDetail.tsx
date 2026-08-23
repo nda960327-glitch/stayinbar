@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { won, wonShort, pct, maskRrn } from "@/lib/format";
-import type { EmployeeReport, MonthProjection, OwnerPnL } from "@/lib/types";
+import type { ContractDefaults, EmployeeReport, MonthProjection, OwnerPnL } from "@/lib/types";
 import ContractViewer from "@/components/ContractViewer";
 
 interface AiReport {
@@ -28,6 +28,7 @@ export default function EmployeeDetail({
   pnl,
   onUpdated,
   incentiveClause,
+  contractDefaults,
 }: {
   emp: EmployeeReport;
   month: string;
@@ -36,6 +37,7 @@ export default function EmployeeDetail({
   pnl?: Pick<OwnerPnL, "incentiveMode" | "incentiveRate">; // 이 달의 인센티브 방식
   onUpdated?: () => void;          // 본인 설정(세금 방식 등)을 바꾼 뒤 다시 불러오기
   incentiveClause?: string;        // 근로계약서 인센티브 조항
+  contractDefaults?: ContractDefaults; // 계약서 빈 칸 기본값 (주소·대표자·담당업무)
 }) {
   const [taxSaving, setTaxSaving] = useState(false);
   const [taxMsg, setTaxMsg] = useState("");
@@ -300,7 +302,7 @@ export default function EmployeeDetail({
       </div>
 
       {/* 근로계약서 */}
-      <ContractViewer emp={emp} businessName="STAY IN BAR" isOwner={isOwner} incentiveClause={incentiveClause} />
+      <ContractViewer emp={emp} businessName="STAY IN BAR" isOwner={isOwner} incentiveClause={incentiveClause} defaults={contractDefaults} />
 
       {/* AI 리포트 */}
       <div className="card mt" style={{ background: "var(--bg-2)" }}>

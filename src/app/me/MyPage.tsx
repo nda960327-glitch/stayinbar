@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { won, wonShort, pct } from "@/lib/format";
-import type { EmployeeReport, MonthProjection, OwnerPnL } from "@/lib/types";
+import type { ContractDefaults, EmployeeReport, MonthProjection, OwnerPnL } from "@/lib/types";
 import EmployeeDetail from "@/components/EmployeeDetail";
 import ChangePin from "./ChangePin";
 
@@ -19,6 +19,7 @@ interface MyData {
   projection?: MonthProjection;
   pnl?: Pick<OwnerPnL, "incentiveMode" | "incentiveRate">;
   incentiveClause?: string;
+  contractDefaults?: ContractDefaults;
 }
 
 export default function MyPage() {
@@ -110,7 +111,7 @@ export default function MyPage() {
 
       {/* 내 리포트 */}
       {data.me ? (
-        <EmployeeDetail emp={data.me} month={month} isOwner={false} projection={data.projection} pnl={data.pnl} onUpdated={() => load(month)} incentiveClause={data.incentiveClause} />
+        <EmployeeDetail emp={data.me} month={month} isOwner={false} projection={data.projection} pnl={data.pnl} onUpdated={() => load(month)} incentiveClause={data.incentiveClause} contractDefaults={data.contractDefaults} />
       ) : (
         <div className="card mt">
           <div className="notice">

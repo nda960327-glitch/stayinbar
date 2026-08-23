@@ -42,6 +42,7 @@ export async function GET(req: Request) {
       pnl: { incentiveMode: result.owner.incentiveMode, incentiveRate: result.owner.incentiveRate },
       notices: config.notices ?? [],
       incentiveClause: incentiveClauseText(config),
+      contractDefaults: { businessAddress: config.businessAddress ?? "", ownerName: config.ownerName ?? "", jobDescription: config.defaultJobDescription ?? "" },
       source,
       updatedAt,
     });
@@ -53,6 +54,7 @@ export async function GET(req: Request) {
     businessName: config.businessName,
     notices: config.notices ?? [],
     incentiveClause: incentiveClauseText(config),
+    contractDefaults: { businessAddress: config.businessAddress ?? "", ownerName: config.ownerName ?? "", jobDescription: config.defaultJobDescription ?? "" },
     source,
     updatedAt,
     ...result,

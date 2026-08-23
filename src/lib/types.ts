@@ -61,6 +61,13 @@ export interface Notice {
 
 export type IncentiveMode = "sales-pool" | "profit-share";
 
+// 근로계약서에서 칸이 비어 있을 때 대신 보여줄 매장 기본값
+export interface ContractDefaults {
+  businessAddress: string;
+  ownerName: string;
+  jobDescription: string;
+}
+
 export interface AppConfig {
   businessName: string;
   businessAddress?: string;   // 사업장 주소 (근로계약서 근무장소·사업장 주소 기본값)

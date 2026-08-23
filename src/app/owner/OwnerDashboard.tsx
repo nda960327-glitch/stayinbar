@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { won, wonShort, pct } from "@/lib/format";
-import type { EmployeeReport, MonthlyResult } from "@/lib/types";
+import type { ContractDefaults, EmployeeReport, MonthlyResult } from "@/lib/types";
 import EmployeeDetail from "@/components/EmployeeDetail";
 
 type OwnerData = MonthlyResult & {
   businessName: string;
   incentiveClause?: string;
+  contractDefaults?: ContractDefaults;
   source: string;
   updatedAt: string;
 };
@@ -458,7 +459,7 @@ export default function OwnerDashboard() {
           {data.employees
             .filter((e) => e.id === openEmp)
             .map((e) => (
-              <EmployeeDetail key={e.id} emp={e} month={month} isOwner projection={data.projection} pnl={o} incentiveClause={data.incentiveClause} />
+              <EmployeeDetail key={e.id} emp={e} month={month} isOwner projection={data.projection} pnl={o} incentiveClause={data.incentiveClause} contractDefaults={data.contractDefaults} />
             ))}
 
           {/* 데이터 업로드 */}

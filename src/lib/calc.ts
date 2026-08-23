@@ -5,10 +5,16 @@ import type {
   EmployeeReport,
   LogRow,
   MonthlyResult,
+  MonthProjection,
   OwnerPnL,
   TakeHome,
   TaxMode,
 } from "./types";
+
+// 오늘 날짜 (한국 시간 기준 YYYY-MM-DD)
+function todayKST(): string {
+  return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+}
 
 // ── 이름 매칭 ─────────────────────────────────────────────
 export function matchEmployee(name: string, employees: Employee[]): Employee | null {
@@ -122,7 +128,8 @@ export function listMonths(rows: LogRow[]): string[] {
 export function computeMonthly(
   rows: LogRow[],
   config: AppConfig,
-  month?: string
+  month?: string,
+  today: string = todayKST()
 ): MonthlyResult {
   const availableMonths = listMonths(rows);
   const targetMonth = month && availableMonths.includes(month)
@@ -199,12 +206,79 @@ export function computeMonthly(
 
   const totalScore = Array.from(byEmp.values()).reduce((a, b) => a + b.score, 0);
 
-  // 인센티브 풀
+  // 인센티브 방식 결정
+  // - profit-share: incentiveProfitStartMonth(예: 2026-09) 이후 달 → 순이익의 N%를 풀로 잡고 기여점수 비례 분배
+  // - sales-pool : 그 전 달 → 매출의 3% 풀(지정자 균등) + 2% 풀(점수 비례)
+  const profitRate = config.incentiveProfitRate ?? 0;
+  const profitStart = config.incentiveProfitStartMonth ?? "";
+  const useProfitShare = profitRate > 0 && !!profitStart && !!targetMonth && targetMonth >= profitStart;
+
   const pool3Total = Math.round(totalSales * config.incentivePool3Rate);
   const pool2Total = Math.round(totalSales * config.incentivePool2Rate);
   const pool3Recipients = config.employees.filter(
     (e) => e.getsPool3 && e.role !== "owner"
   );
+
+  // 급여 (인센티브 계산보다 먼저 — 순이익 인센티브는 급여를 뺀 이익 기준)
+  const baseSalaryOf = (emp: Employee, hoursWorked: number) =>
+    emp.employmentType === "hourly"
+      ? Math.round(hoursWorked * emp.hourlyWage)
+      : Math.round(emp.annualSalary / 12);
+
+  const payrollEmployees = config.employees.filter((e) => e.role !== "owner");
+  const totalPayrollPre = payrollEmployees.reduce((sum, emp) => {
+    const agg = byEmp.get(emp.id);
+    return sum + baseSalaryOf(emp, agg?.totalHours ?? 0);
+  }, 0);
+
+  const vc = config.variableCosts[targetMonth] ?? { material: 0, marketing: 0 };
+  const vat = Math.round(totalSales * config.vatRate);
+  const cardFee = Math.round(totalSales * 0.02);
+  // 인센티브 차감 전 순이익 = 매출 − 급여 − 고정비 − 부가세 − 카드수수료 − 재료비/주류비 − 마케팅및기타
+  const profitBeforeIncentive =
+    totalSales -
+    totalPayrollPre -
+    config.fixedCost -
+    sheetMaterialCost -
+    vat -
+    cardFee -
+    vc.marketing;
+  // 순이익 풀: 이익이 0 이하인 달은 인센티브 없음
+  const profitPool = useProfitShare ? Math.max(0, Math.round(profitBeforeIncentive * profitRate)) : 0;
+
+  // ── 월말 예상 ────────────────────────────────────────────
+  // 진행 중인 달: 지금까지의 '달력일 1일당 평균'으로 월말까지 늘려 잡는다 (매출·영업일·시급·재료비)
+  // 지난 달: 실적이 곧 결과이므로 배수 1
+  const [ty, tm] = targetMonth.split("-").map(Number);
+  const daysInMonth = ty && tm ? new Date(ty, tm, 0).getDate() : 30;
+  const isCurrentMonth = !!targetMonth && today.startsWith(targetMonth);
+  const lastDataDay = dailySales.length > 0 ? Number(dailySales[0].date.slice(8, 10)) : 0;
+  const elapsedDays = isCurrentMonth
+    ? Math.min(daysInMonth, Math.max(1, Number(today.slice(8, 10)), lastDataDay))
+    : daysInMonth;
+  const isPartial = isCurrentMonth && elapsedDays < daysInMonth;
+  const scale = isPartial && elapsedDays > 0 ? daysInMonth / elapsedDays : 1;
+
+  const projectedSales = Math.round(totalSales * scale);
+  const projectedWorkingDays = Math.round(workingDays * scale);
+  const projectedPayroll = payrollEmployees.reduce((sum, emp) => {
+    const agg = byEmp.get(emp.id);
+    const hours = (agg?.totalHours ?? 0) * (emp.employmentType === "hourly" ? scale : 1);
+    return sum + baseSalaryOf(emp, hours);
+  }, 0);
+  const projectedProfitBeforeIncentive =
+    projectedSales -
+    projectedPayroll -
+    config.fixedCost -
+    Math.round(sheetMaterialCost * scale) -
+    Math.round(projectedSales * config.vatRate) -
+    Math.round(projectedSales * 0.02) -
+    vc.marketing;
+  const projectedProfitPool = useProfitShare
+    ? Math.max(0, Math.round(projectedProfitBeforeIncentive * profitRate))
+    : 0;
+  const projectedPool3 = Math.round(projectedSales * config.incentivePool3Rate);
+  const projectedPool2 = Math.round(projectedSales * config.incentivePool2Rate);
 
   const reports: EmployeeReport[] = [];
   for (const emp of config.employees) {
@@ -215,19 +289,32 @@ export function computeMonthly(
     const hoursWorked = agg.totalHours;
     const contributionRate = totalScore > 0 ? (agg.score / totalScore) * 100 : 0;
 
-    // 급여
-    let baseSalary = 0;
-    if (emp.employmentType === "hourly") {
-      baseSalary = Math.round(hoursWorked * emp.hourlyWage);
+    const baseSalary = baseSalaryOf(emp, hoursWorked);
+
+    let incentive = 0;
+    if (useProfitShare) {
+      // 순이익 풀을 기여점수에 비례해 분배
+      incentive = totalScore > 0 ? Math.round(profitPool * (agg.score / totalScore)) : 0;
     } else {
-      baseSalary = Math.round(emp.annualSalary / 12);
+      // 2%풀은 점수 비례, 3%풀은 지정자 균등 분배
+      incentive = totalScore > 0 ? Math.round(pool2Total * (agg.score / totalScore)) : 0;
+      if (emp.getsPool3 && pool3Recipients.length > 0) {
+        incentive += Math.round(pool3Total / pool3Recipients.length);
+      }
     }
 
-    // 인센티브: 2%풀은 점수 비례, 3%풀은 지정자 균등 분배
-    let incentive = totalScore > 0 ? Math.round(pool2Total * (agg.score / totalScore)) : 0;
-    if (emp.getsPool3 && pool3Recipients.length > 0) {
-      incentive += Math.round(pool3Total / pool3Recipients.length);
+    // 월말 예상 인센티브 (기여율은 지금까지의 비율이 유지된다고 가정)
+    let projectedIncentive = 0;
+    if (useProfitShare) {
+      projectedIncentive = totalScore > 0 ? Math.round(projectedProfitPool * (agg.score / totalScore)) : 0;
+    } else {
+      projectedIncentive = totalScore > 0 ? Math.round(projectedPool2 * (agg.score / totalScore)) : 0;
+      if (emp.getsPool3 && pool3Recipients.length > 0) {
+        projectedIncentive += Math.round(projectedPool3 / pool3Recipients.length);
+      }
     }
+    const projectedBaseSalary = baseSalaryOf(emp, hoursWorked * (emp.employmentType === "hourly" ? scale : 1));
+    const projectedGrossPay = projectedBaseSalary + projectedIncentive;
 
     const grossPay = baseSalary + incentive;
     const takeHome = computeTakeHome(grossPay, emp.taxMode);
@@ -248,6 +335,8 @@ export function computeMonthly(
       contributionRate,
       baseSalary,
       incentive,
+      projectedIncentive,
+      projectedGrossPay,
       grossPay,
       takeHome,
       takeHome33,
@@ -267,18 +356,20 @@ export function computeMonthly(
   const totalPayroll = reports.reduce((a, b) => a + b.baseSalary, 0);
   const totalIncentive = reports.reduce((a, b) => a + b.incentive, 0);
 
-  const vc = config.variableCosts[targetMonth] ?? { material: 0, marketing: 0 };
-  const vat = Math.round(totalSales * config.vatRate);
-  const cardFee = Math.round(totalSales * 0.02);
-  const netProfit =
-    totalSales -
-    totalPayroll -
-    totalIncentive -
-    config.fixedCost -
-    sheetMaterialCost -
-    vat -
-    cardFee -
-    vc.marketing;
+  const netProfit = profitBeforeIncentive - totalIncentive;
+
+  const projectedIncentivePool = reports.reduce((a, b) => a + b.projectedIncentive, 0);
+  const projection: MonthProjection = {
+    isPartial,
+    daysInMonth,
+    elapsedDays,
+    projectedWorkingDays,
+    projectedSales,
+    projectedPayroll,
+    projectedProfitBeforeIncentive,
+    projectedIncentivePool,
+    projectedNetProfit: projectedProfitBeforeIncentive - projectedIncentivePool,
+  };
 
   const owner: OwnerPnL = {
     month: targetMonth,
@@ -294,6 +385,9 @@ export function computeMonthly(
     cardFee,
     marketingCost: vc.marketing,
     netProfit,
+    incentiveMode: useProfitShare ? "profit-share" : "sales-pool",
+    incentiveRate: useProfitShare ? profitRate : 0,
+    profitBeforeIncentive,
   };
 
   // 재료비 상세 내역 (날짜, 품목/내역, 구매자, 금액)
@@ -320,6 +414,7 @@ export function computeMonthly(
 
   return {
     month: targetMonth,
+    projection,
     availableMonths,
     totalSales,
     workingDays,

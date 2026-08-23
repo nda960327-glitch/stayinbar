@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { AppConfig, Employee } from "@/lib/types";
+import type { AppConfig, Employee, Notice } from "@/lib/types";
 import { won } from "@/lib/format";
 
 function emptyEmployee(): Employee {
@@ -48,6 +48,24 @@ export default function SettingsForm() {
       const employees = c.employees.map((e, i) => (i === idx ? { ...e, ...patch } : e));
       return { ...c, employees };
     });
+  }
+
+  function setNotice(idx: number, patch: Partial<Notice>) {
+    setConfig((c) => {
+      if (!c) return c;
+      const notices = (c.notices ?? []).map((n, i) => (i === idx ? { ...n, ...patch } : n));
+      return { ...c, notices };
+    });
+  }
+
+  function addNotice() {
+    const today = new Date().toISOString().slice(0, 10);
+    const n: Notice = { id: "notice-" + Date.now().toString(36), date: today, title: "", body: "", pinned: false };
+    setConfig((c) => (c ? { ...c, notices: [n, ...(c.notices ?? [])] } : c));
+  }
+
+  function removeNotice(idx: number) {
+    setConfig((c) => (c ? { ...c, notices: (c.notices ?? []).filter((_, i) => i !== idx) } : c));
   }
 
   function addEmp() {
@@ -149,9 +167,74 @@ export default function SettingsForm() {
         </p>
       </div>
 
+      {/* 공지사항 */}
+      <div className="card mt">
+        <div className="row spread">
+          <h2 style={{ margin: 0 }}>📢 공지사항</h2>
+          <button className="btn ghost sm" onClick={addNotice} type="button">
+            + 공지 추가
+          </button>
+        </div>
+        <p className="muted small mt-s">
+          직원 페이지 · 대시보드 · 임원 대시보드 상단에 표시됩니다. 내용을 고친 뒤 맨 아래 <strong>전체 저장</strong>을 누르세요.
+        </p>
+        {(config.notices ?? []).length === 0 && (
+          <p className="muted small">등록된 공지가 없습니다.</p>
+        )}
+        {(config.notices ?? []).map((n, idx) => (
+          <div key={n.id} style={{ marginTop: 12, padding: 14, background: "var(--bg-1)", borderRadius: 8 }}>
+            <div className="grid cols-3">
+              <label className="field" style={{ gridColumn: "span 2" }}>
+                <span className="cap">제목</span>
+                <input value={n.title} onChange={(e) => setNotice(idx, { title: e.target.value })} placeholder="예: 9월부터 인센티브 제도가 바뀝니다" />
+              </label>
+              <label className="field">
+                <span className="cap">게시일</span>
+                <input type="date" value={n.date} onChange={(e) => setNotice(idx, { date: e.target.value })} />
+              </label>
+            </div>
+            <label className="field" style={{ marginTop: 8 }}>
+              <span className="cap">내용</span>
+              <textarea rows={6} value={n.body} onChange={(e) => setNotice(idx, { body: e.target.value })} placeholder="공지 내용 (줄바꿈 그대로 표시됩니다)" />
+            </label>
+            <div className="row spread" style={{ marginTop: 8 }}>
+              <label className="row small">
+                <input type="checkbox" checked={!!n.pinned} onChange={(e) => setNotice(idx, { pinned: e.target.checked })} style={{ width: "auto" }} />
+                맨 위에 고정
+              </label>
+              <button className="btn ghost sm" onClick={() => removeNotice(idx)} type="button">삭제</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* 인센티브 설정 */}
       <div className="card mt">
-        <h2>인센티브 풀 설정</h2>
+        <h2>인센티브 설정</h2>
+        <div className="grid cols-2">
+          <label className="field">
+            <span className="cap">순이익 인센티브 비율 (예: 0.1 = 10%)</span>
+            <input
+              type="number"
+              step="0.01"
+              value={config.incentiveProfitRate ?? 0}
+              onChange={(e) => set("incentiveProfitRate", Number(e.target.value))}
+            />
+          </label>
+          <label className="field">
+            <span className="cap">순이익 인센티브 적용 시작 월 (YYYY-MM)</span>
+            <input
+              type="month"
+              value={config.incentiveProfitStartMonth ?? ""}
+              onChange={(e) => set("incentiveProfitStartMonth", e.target.value)}
+            />
+          </label>
+        </div>
+        <p className="muted small">
+          적용 시작 월부터는 <strong>인센티브 차감 전 순이익 × 비율</strong>을 인센티브 풀로 잡고 전 직원 기여점수에 비례해 분배합니다
+          (순이익이 0 이하인 달은 인센티브 없음). 그 전 달은 아래 매출 풀 방식으로 계산됩니다.
+        </p>
+        <h2 style={{ marginTop: 16 }}>매출 풀 방식 <span className="sub">적용 시작 월 이전 달에만 사용</span></h2>
         <div className="grid cols-2">
           <label className="field">
             <span className="cap">3% 풀 비율 (점장 단독)</span>

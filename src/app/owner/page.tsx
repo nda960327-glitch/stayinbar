@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import TopBar from "@/components/TopBar";
+import NoticeBoard from "@/components/NoticeBoard";
 import OwnerDashboard from "./OwnerDashboard";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function OwnerPage() {
     <>
       <TopBar name={session.name} role="owner" business={config.businessName} />
       <div className="container">
+        <NoticeBoard notices={config.notices} />
         <OwnerDashboard />
       </div>
     </>

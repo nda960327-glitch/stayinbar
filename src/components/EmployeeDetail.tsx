@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { won, pct, maskRrn } from "@/lib/format";
-import type { EmployeeReport } from "@/lib/types";
+import { won, wonShort, pct, maskRrn } from "@/lib/format";
+import type { EmployeeReport, MonthProjection, OwnerPnL } from "@/lib/types";
 import ContractViewer from "@/components/ContractViewer";
 
 interface AiReport {
@@ -24,11 +24,24 @@ export default function EmployeeDetail({
   emp,
   month,
   isOwner,
+  projection,
+  pnl,
 }: {
   emp: EmployeeReport;
   month: string;
   isOwner: boolean;
+  projection?: MonthProjection;   // 월말 예상 (매출·순이익·인센티브 풀)
+  pnl?: Pick<OwnerPnL, "incentiveMode" | "incentiveRate">; // 이 달의 인센티브 방식
 }) {
+  const projIncentive = emp.projectedIncentive ?? emp.incentive;
+  const isPartial = !!projection?.isPartial;
+  const ratePct = Math.round((pnl?.incentiveRate ?? 0) * 100);
+  const modeLabel =
+    pnl?.incentiveMode === "profit-share"
+      ? `순이익의 ${ratePct}% 풀 · 기여점수 비례`
+      : pnl?.incentiveMode === "sales-pool"
+        ? "매출 3% + 2% 풀"
+        : "";
   const [viewTaxMode, setViewTaxMode] = useState<"3.3" | "4insurance">(emp.takeHome?.mode ?? "3.3");
   const [ai, setAi] = useState<AiReport | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -119,10 +132,37 @@ export default function EmployeeDetail({
         </div>
         <div className="stat">
           <div className="label">이번달 예상 인센티브</div>
-          <div className="value sm accent">{won(emp.incentive)}</div>
-          <div className="foot">기여율 {pct(emp.contributionRate)}</div>
+          <div className="value sm accent">{won(projIncentive)}</div>
+          <div className="foot">
+            기여율 {pct(emp.contributionRate)}
+            {isPartial && projIncentive !== emp.incentive ? ` · 현재까지 ${won(emp.incentive)}` : ""}
+          </div>
         </div>
       </div>
+
+      {/* 월말 예상 근거 — 예상매출·예상순이익에서 인센티브가 어떻게 나오는지 */}
+      {projection && (
+        <div className="notice mt" style={{ lineHeight: 1.7 }}>
+          <strong>
+            {isPartial
+              ? `📈 월말 예상 (${projection.elapsedDays}/${projection.daysInMonth}일 경과 · 지금 추세 기준)`
+              : "📈 이 달 결과 기준"}
+          </strong>
+          <div className="small" style={{ marginTop: 4 }}>
+            예상 매출 <strong>{wonShort(projection.projectedSales)}원</strong>
+            {" · "}예상 영업일 {projection.projectedWorkingDays}일
+            {" · "}예상 순이익(인센티브 전) <strong>{wonShort(projection.projectedProfitBeforeIncentive)}원</strong>
+            {" → "}인센티브 풀 <strong>{wonShort(projection.projectedIncentivePool)}원</strong>
+            {modeLabel ? ` (${modeLabel})` : ""}
+            {" → "}내 예상 인센티브 <strong>{won(projIncentive)}</strong>
+          </div>
+          {isPartial && (
+            <div className="small muted" style={{ marginTop: 2 }}>
+              남은 기간 매출·근무·기여율이 지금과 비슷하다고 가정한 추정치라 월말 확정 금액과 다를 수 있습니다.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 실수령액 */}
       <div className="card mt" style={{ background: "var(--bg-2)" }}>

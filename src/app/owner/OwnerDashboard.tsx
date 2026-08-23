@@ -275,7 +275,10 @@ export default function OwnerDashboard() {
             </div>
             <div className="pnl-line">
               <span className="name">
-                총 인센티브 <span className="hint">3% + 2% 풀</span>
+                총 인센티브{" "}
+                <span className="hint">
+                  {o.incentiveMode === "profit-share" ? `순이익의 ${Math.round((o.incentiveRate ?? 0) * 100)}% · 기여점수 비례` : "매출 3% + 2% 풀"}
+                </span>
               </span>
               <span className="amt minus">- {won(o.totalIncentive)}</span>
             </div>
@@ -363,6 +366,11 @@ export default function OwnerDashboard() {
             <p className="muted small mt-s">
               순수익 = 매출 − 급여 − 인센티브 − 고정비 − 부가세 − 카드수수료 − 재료비/주류비 − 마케팅및기타
             </p>
+            {o.incentiveMode === "profit-share" && (
+              <p className="muted small">
+                인센티브 = 인센티브 차감 전 순이익 {won(o.profitBeforeIncentive ?? 0)} × {Math.round((o.incentiveRate ?? 0) * 100)}% → 기여점수 비례 분배
+              </p>
+            )}
           </div>
 
           {/* 직원 요약 테이블 */}
@@ -383,6 +391,7 @@ export default function OwnerDashboard() {
                     <th>기여율</th>
                     <th>급여</th>
                     <th>인센티브</th>
+                    <th>예상 인센티브<div className="muted small" style={{ fontWeight: 400 }}>월말 추정</div></th>
                     <th>세전 합계</th>
                     <th>실수령(추정)</th>
                     <th></th>
@@ -405,6 +414,7 @@ export default function OwnerDashboard() {
                       <td>{pct(e.contributionRate)}</td>
                       <td>{won(e.baseSalary)}</td>
                       <td>{won(e.incentive)}</td>
+                      <td>{won(e.projectedIncentive ?? e.incentive)}</td>
                       <td>{won(e.grossPay)}</td>
                       <td>{won(e.takeHome.net)}</td>
                       <td>
@@ -424,6 +434,7 @@ export default function OwnerDashboard() {
                     <td></td>
                     <td>{won(o.totalPayroll)}</td>
                     <td>{won(o.totalIncentive)}</td>
+                    <td>{won(data.projection?.projectedIncentivePool ?? o.totalIncentive)}</td>
                     <td>{won(o.totalPayroll + o.totalIncentive)}</td>
                     <td></td>
                     <td></td>
@@ -442,7 +453,7 @@ export default function OwnerDashboard() {
           {data.employees
             .filter((e) => e.id === openEmp)
             .map((e) => (
-              <EmployeeDetail key={e.id} emp={e} month={month} isOwner />
+              <EmployeeDetail key={e.id} emp={e} month={month} isOwner projection={data.projection} pnl={o} />
             ))}
 
           {/* 데이터 업로드 */}

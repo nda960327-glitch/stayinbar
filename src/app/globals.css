@@ -270,6 +270,7 @@ label.field .cap {
   margin-bottom: 5px;
 }
 input,
+textarea,
 select {
   width: 100%;
   background: var(--bg-2);
@@ -281,6 +282,7 @@ select {
   font-family: inherit;
 }
 input:focus,
+textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--accent);
@@ -448,4 +450,30 @@ select:focus {
   color: #1a1509;
   border-color: var(--accent);
   font-weight: 700;
+}
+
+/* ── 공지사항 ── */
+.notice-board {
+  border-color: var(--accent);
+  margin-bottom: 16px;
+}
+.notice-item + .notice-item {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.notice-item .notice-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+.notice-item .notice-body {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-line;
+  color: var(--text, inherit);
 }

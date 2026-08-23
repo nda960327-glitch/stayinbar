@@ -37,6 +37,9 @@ export async function GET(req: Request) {
       targetSales: result.targetSales,
       targetAchievement: result.owner.targetAchievement,
       me: mine,
+      projection: result.projection,
+      pnl: { incentiveMode: result.owner.incentiveMode, incentiveRate: result.owner.incentiveRate },
+      notices: config.notices ?? [],
       source,
       updatedAt,
     });
@@ -46,6 +49,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     role: "owner",
     businessName: config.businessName,
+    notices: config.notices ?? [],
     source,
     updatedAt,
     ...result,

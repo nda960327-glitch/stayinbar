@@ -4,12 +4,23 @@
   "dailyTarget": 1500000,
   "incentivePool3Rate": 0.03,
   "incentivePool2Rate": 0.02,
+  "incentiveProfitRate": 0.1,
+  "incentiveProfitStartMonth": "2026-09",
   "vatRate": 0.1,
   "defaultHoursPerDay": 9,
   "defaultServerWage": 12000,
   "sheetCsvUrl": "https://docs.google.com/spreadsheets/d/1tS5uY29cddvv5-_QAE2C-0CkOyIjIwb_UmgPuvIltHA/edit?gid=1583198180#gid=1583198180",
   "ownerPin": "1996",
   "execPin": "240901",
+  "notices": [
+    {
+      "id": "notice-2026-09-incentive",
+      "date": "2026-08-23",
+      "title": "9월부터 인센티브 제도가 바뀝니다",
+      "body": "2026년 9월 1일(9월분 급여)부터 인센티브 지급 기준이 아래와 같이 변경됩니다.\n\n• 변경 전: 월 매출의 3% 풀(점장) + 2% 풀(기여점수 비례 분배)\n• 변경 후: 월 순이익의 10%를 인센티브 풀로 편성하고, 전 직원의 기여점수에 비례해 분배\n\n순이익은 매출에서 급여·고정비·부가세·카드수수료·재료비/주류비·마케팅비를 뺀 금액(인센티브 차감 전)입니다. 순이익이 0 이하인 달은 인센티브가 없고, 매장이 잘될수록 더 많은 인센티브가 돌아가는 구조입니다.\n8월분까지는 기존 방식 그대로 지급됩니다. 궁금한 점은 사장님께 문의해 주세요.",
+      "pinned": true
+    }
+  ],
   "variableCosts": {},
   "employees": [
     {

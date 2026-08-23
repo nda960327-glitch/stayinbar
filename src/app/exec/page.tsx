@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { won, wonShort, pct } from "@/lib/format";
-import type { MonthlyResult } from "@/lib/types";
+import type { MonthlyResult, Notice } from "@/lib/types";
+import NoticeBoard from "@/components/NoticeBoard";
 
 import TopBar from "@/components/TopBar";
 
-type ExecData = MonthlyResult & { businessName: string; source: string; updatedAt: string };
+type ExecData = MonthlyResult & { businessName: string; source: string; updatedAt: string; notices?: Notice[] };
 
 
 export default function ExecPage() {
@@ -168,6 +169,8 @@ export default function ExecPage() {
           </div>
         </div>
 
+        <NoticeBoard notices={data.notices} />
+
         {/* KPI Cards */}
         <div className="grid cols-4">
           <div className="stat">
@@ -205,7 +208,7 @@ export default function ExecPage() {
           {[
             { label: "월 총매출", value: o.totalSales ?? 0, plus: true },
             { label: "총 급여 (세전)", value: o.totalPayroll ?? 0 },
-            { label: "총 인센티브", value: o.totalIncentive ?? 0 },
+            { label: o.incentiveMode === "profit-share" ? `총 인센티브 (순이익의 ${Math.round((o.incentiveRate ?? 0) * 100)}%)` : "총 인센티브 (매출 3% + 2% 풀)", value: o.totalIncentive ?? 0 },
             { label: "고정비 (월세 등)", value: o.fixedCost ?? 0 },
             { label: "부가세 (10%)", value: o.vat ?? 0 },
             { label: "카드수수료 (2%)", value: o.cardFee ?? 0 },
@@ -269,6 +272,11 @@ export default function ExecPage() {
           <p className="muted small mt-s">
             순수익 = 매출 − 급여 − 인센티브 − 고정비 − 부가세 − 카드수수료 − 재료비/주류비 − 마케팅및기타
           </p>
+          {o.incentiveMode === "profit-share" && (
+            <p className="muted small">
+              인센티브 = 인센티브 차감 전 순이익 {won(o.profitBeforeIncentive ?? 0)} × {Math.round((o.incentiveRate ?? 0) * 100)}% → 기여점수 비례 분배
+            </p>
+          )}
         </div>
 
         {/* Employee Table */}
@@ -284,6 +292,7 @@ export default function ExecPage() {
                   <th>기여율</th>
                   <th>급여 (세전)</th>
                   <th>인센티브</th>
+                  <th>예상 인센티브<div className="muted small" style={{ fontWeight: 400 }}>월말 추정</div></th>
                   <th>합계 (세전)</th>
                 </tr>
               </thead>
@@ -299,6 +308,7 @@ export default function ExecPage() {
                     <td>{pct(e.contributionRate)}</td>
                     <td>{won(e.baseSalary)}</td>
                     <td>{won(e.incentive)}</td>
+                    <td>{won(e.projectedIncentive ?? e.incentive)}</td>
                     <td>{won(e.grossPay)}</td>
                   </tr>
                 ))}
@@ -309,6 +319,7 @@ export default function ExecPage() {
                   <td></td>
                   <td>{won(o.totalPayroll ?? 0)}</td>
                   <td>{won(o.totalIncentive ?? 0)}</td>
+                  <td>{won(data.projection?.projectedIncentivePool ?? o.totalIncentive ?? 0)}</td>
                   <td>{won((o.totalPayroll ?? 0) + (o.totalIncentive ?? 0))}</td>
                 </tr>
               </tbody>

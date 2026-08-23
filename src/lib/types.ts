@@ -46,12 +46,27 @@ export interface VariableCost {
   marketing: number; // 마케팅 및 기타
 }
 
+// 공지사항 (직원·사장·임원 화면 상단에 표시)
+export interface Notice {
+  id: string;
+  date: string;     // 게시일 (YYYY-MM-DD)
+  title: string;
+  body: string;
+  pinned?: boolean; // 맨 위 고정
+}
+
+export type IncentiveMode = "sales-pool" | "profit-share";
+
 export interface AppConfig {
   businessName: string;
   fixedCost: number;
   dailyTarget: number;
   incentivePool3Rate: number;
   incentivePool2Rate: number;
+  // 순이익 인센티브 (incentiveProfitStartMonth 이후 달부터 적용, 그 전 달은 매출 풀 방식)
+  incentiveProfitRate?: number;        // 순이익 중 인센티브 풀 비율 (예: 0.1)
+  incentiveProfitStartMonth?: string;  // 적용 시작 월 (YYYY-MM)
+  notices?: Notice[];
   vatRate: number;
   defaultHoursPerDay: number;
   defaultServerWage: number;
@@ -107,7 +122,9 @@ export interface EmployeeReport {
   score: number;
   contributionRate: number; // %
   baseSalary: number; // 세전 급여(월)
-  incentive: number;
+  incentive: number;            // 현재까지 데이터 기준 인센티브
+  projectedIncentive: number;   // 월말 예상매출·예상순이익 기준 예상 인센티브
+  projectedGrossPay: number;    // 예상 급여(월말) + 예상 인센티브 (세전)
   grossPay: number; // 급여 + 인센티브 (세전)
   takeHome: TakeHome;
   takeHome33: TakeHome;
@@ -137,6 +154,9 @@ export interface OwnerPnL {
   cardFee: number; // 카드 수수료
   marketingCost: number; // 마케팅 및 기타 (입력)
   netProfit: number;
+  incentiveMode: IncentiveMode;   // 이 달에 적용된 인센티브 방식
+  incentiveRate: number;          // profit-share일 때 순이익 대비 비율 (예: 0.1)
+  profitBeforeIncentive: number;  // 인센티브 차감 전 순이익 (profit-share의 기준 금액)
 }
 
 export interface DailySale {
@@ -151,8 +171,22 @@ export interface MaterialDetailItem {
   amount: number;  // 금액
 }
 
+// 월말 예상치 — 이번 달이 아직 진행 중이면 지금까지의 일평균으로 월말을 추정, 지난 달은 실적 그대로
+export interface MonthProjection {
+  isPartial: boolean;            // 진행 중인 달이라 추정치인지
+  daysInMonth: number;
+  elapsedDays: number;           // 추정에 쓴 경과 일수
+  projectedWorkingDays: number;
+  projectedSales: number;
+  projectedPayroll: number;
+  projectedProfitBeforeIncentive: number;
+  projectedIncentivePool: number; // 전 직원 예상 인센티브 합계
+  projectedNetProfit: number;
+}
+
 export interface MonthlyResult {
   month: string;
+  projection: MonthProjection;
   availableMonths: string[];
   totalSales: number;
   workingDays: number;

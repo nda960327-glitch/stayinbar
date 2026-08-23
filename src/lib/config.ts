@@ -121,6 +121,7 @@ async function withDefaults(stored: AppConfig): Promise<AppConfig> {
   if (!Array.isArray(stored.notices)) merged.notices = bundled.notices ?? [];
   if (typeof stored.incentiveProfitRate !== "number") merged.incentiveProfitRate = bundled.incentiveProfitRate;
   if (!stored.incentiveProfitStartMonth) merged.incentiveProfitStartMonth = bundled.incentiveProfitStartMonth;
+  if (typeof stored.monthlyTarget !== "number") merged.monthlyTarget = bundled.monthlyTarget;
   return merged;
 }
 

@@ -125,7 +125,15 @@ export default function SettingsForm() {
             />
           </label>
           <label className="field">
-            <span className="cap">1일 목표 매출 (원)</span>
+            <span className="cap">월 목표 매출 (원) — 비우면 1일 목표 × 영업일수</span>
+            <input
+              type="number"
+              value={config.monthlyTarget ?? 0}
+              onChange={(e) => set("monthlyTarget", Number(e.target.value))}
+            />
+          </label>
+          <label className="field">
+            <span className="cap">1일 목표 매출 (원) — 월 목표가 없을 때만 사용</span>
             <input
               type="number"
               value={config.dailyTarget}

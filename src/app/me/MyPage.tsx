@@ -95,7 +95,10 @@ export default function MyPage() {
             <div className={`value ${data.targetAchievement >= 100 ? "green" : ""}`}>
               {pct(data.targetAchievement)}
             </div>
-            <div className="foot">목표 {wonShort(data.targetSales)}원</div>
+            <div className="foot">
+              목표 {wonShort(data.targetSales)}원
+              {data.projection?.isPartial ? ` · 월말 예상 ${wonShort(data.projection.projectedSales)}원` : ""}
+            </div>
           </div>
           <div className="stat">
             <div className="label">영업일수</div>

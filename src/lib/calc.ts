@@ -149,7 +149,9 @@ export function computeMonthly(
   const dailySales = Array.from(dailyMax.entries())
     .map(([date, revenue]) => ({ date, revenue }))
     .sort((a, b) => b.date.localeCompare(a.date));
-  const targetSales = workingDays * config.dailyTarget;
+  // 월 목표: monthlyTarget이 있으면 그 값(영업일수 무관), 없으면 1일 목표 × 영업일수
+  const monthlyTarget = config.monthlyTarget ?? 0;
+  const targetSales = monthlyTarget > 0 ? monthlyTarget : workingDays * config.dailyTarget;
   
   // 시트에서 합산한 해당 월의 총 재료비+주류비
   const sheetMaterialCost = monthRows.reduce((sum, r) => sum + (r.materialCost || 0), 0);
@@ -376,6 +378,9 @@ export function computeMonthly(
     totalSales,
     workingDays,
     targetSales,
+    dailyTarget: monthlyTarget > 0
+      ? Math.round(monthlyTarget / Math.max(1, projectedWorkingDays))
+      : config.dailyTarget,
     targetAchievement: targetSales > 0 ? (totalSales / targetSales) * 100 : 0,
     totalPayroll,
     totalIncentive,

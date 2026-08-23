@@ -60,7 +60,8 @@ export type IncentiveMode = "sales-pool" | "profit-share";
 export interface AppConfig {
   businessName: string;
   fixedCost: number;
-  dailyTarget: number;
+  dailyTarget: number;        // 1일 목표 매출 (monthlyTarget이 없을 때 영업일수 × 이 값이 월 목표)
+  monthlyTarget?: number;     // 월 목표 매출 — 설정되면 영업일수와 무관하게 이 값이 월 목표
   incentivePool3Rate: number;
   incentivePool2Rate: number;
   // 순이익 인센티브 (incentiveProfitStartMonth 이후 달부터 적용, 그 전 달은 매출 풀 방식)
@@ -145,6 +146,7 @@ export interface OwnerPnL {
   totalSales: number;
   workingDays: number;
   targetSales: number;
+  dailyTarget: number;        // 화면에 보여줄 1일 목표 (월 목표 ÷ 예상 영업일수)
   targetAchievement: number; // %
   totalPayroll: number; // 총 급여(세전)
   totalIncentive: number; // 총 인센티브

@@ -183,13 +183,16 @@ export default function ExecPage() {
             <div className={`value ${(o.targetAchievement ?? 0) >= 100 ? "green" : ""}`}>
               {pct(o.targetAchievement ?? 0)}
             </div>
-            <div className="foot">목표 {wonShort(o.targetSales ?? 0)}원</div>
+            <div className="foot">
+              목표 {wonShort(o.targetSales ?? 0)}원
+              {data.projection?.isPartial ? ` · 월말 예상 ${wonShort(data.projection.projectedSales)}원 (${pct((o.targetSales ?? 0) > 0 ? (data.projection.projectedSales / o.targetSales) * 100 : 0)})` : ""}
+            </div>
           </div>
           <div className="stat">
             <div className="label">영업일수</div>
             <div className="value">{o.workingDays ?? 0}일</div>
             <div className="foot">
-              1일 목표 {wonShort((o.workingDays ?? 0) > 0 ? Math.round((o.targetSales ?? 0) / o.workingDays) : 0)}원
+              1일 목표 {wonShort(o.dailyTarget ?? ((o.workingDays ?? 0) > 0 ? Math.round((o.targetSales ?? 0) / o.workingDays) : 0))}원
             </div>
           </div>
           <div className="stat">

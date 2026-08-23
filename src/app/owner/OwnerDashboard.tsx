@@ -115,7 +115,8 @@ export default function OwnerDashboard() {
   const dailySales = data.dailySales ?? [];
   const maxDaily = dailySales.reduce((m, d) => Math.max(m, d.revenue), 0);
   const avgDaily = dailySales.length > 0 ? Math.round(o.totalSales / dailySales.length) : 0;
-  const dayTarget = o.workingDays > 0 ? Math.round(o.targetSales / o.workingDays) : 0;
+  const dayTarget = o.dailyTarget ?? (o.workingDays > 0 ? Math.round(o.targetSales / o.workingDays) : 0);
+  const proj = data.projection;
   const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
   return (
@@ -175,12 +176,15 @@ export default function OwnerDashboard() {
               <div className={`value ${o.targetAchievement >= 100 ? "green" : ""}`}>
                 {pct(o.targetAchievement)}
               </div>
-              <div className="foot">목표 {wonShort(o.targetSales)}원</div>
+              <div className="foot">
+                목표 {wonShort(o.targetSales)}원
+                {proj?.isPartial ? ` · 월말 예상 ${wonShort(proj.projectedSales)}원 (${pct(o.targetSales > 0 ? (proj.projectedSales / o.targetSales) * 100 : 0)})` : ""}
+              </div>
             </div>
             <div className="stat">
               <div className="label">영업일수</div>
               <div className="value">{o.workingDays}일</div>
-              <div className="foot">1일 목표 {wonShort(o.workingDays > 0 ? Math.round(o.targetSales / o.workingDays) : 0)}원</div>
+              <div className="foot">1일 목표 {wonShort(dayTarget)}원{proj?.isPartial ? ` · 예상 영업일 ${proj.projectedWorkingDays}일` : ""}</div>
             </div>
             <div className="stat">
               <div className="label">최종 순수익</div>

@@ -30,6 +30,7 @@ interface Props {
   emp: EmployeeReport;
   businessName: string;
   isOwner?: boolean;
+  incentiveClause?: string; // 【인센티브】 조항 문구 (서버에서 설정값으로 생성)
 }
 
 function Blank({ v }: { v?: string | number | null }) {
@@ -43,7 +44,7 @@ function Blank({ v }: { v?: string | number | null }) {
   return <strong>{v}</strong>;
 }
 
-export default function ContractViewer({ emp, businessName, isOwner }: Props) {
+export default function ContractViewer({ emp, businessName, isOwner, incentiveClause }: Props) {
   // 서명하면 새로고침 없이 바로 반영되도록 계약 내용을 상태로 들고 있습니다
   const [contract, setContract] = useState<Partial<EmploymentContract>>(emp.contract ?? {});
   useEffect(() => { setContract(emp.contract ?? {}); }, [emp.id, emp.contract]);
@@ -209,9 +210,17 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
             </table>
           </div>
 
-          {/* 제6조 */}
+          {/* 제6조 인센티브 */}
+          {incentiveClause && (
+            <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px dashed #ddd" }}>
+              <div style={{ fontWeight: "bold", marginBottom: 4 }}>제 6 조 【인센티브】</div>
+              <p style={{ whiteSpace: "pre-line" }}>{incentiveClause}</p>
+            </div>
+          )}
+
+          {/* 교부 */}
           <div style={{ marginBottom: 24, paddingBottom: 12, borderBottom: "1px dashed #ddd" }}>
-            <div style={{ fontWeight: "bold", marginBottom: 4 }}>제 6 조 【근로계약서 교부】</div>
+            <div style={{ fontWeight: "bold", marginBottom: 4 }}>제 {incentiveClause ? 7 : 6} 조 【근로계약서 교부】</div>
             <p>&quot;갑&quot;은 근로계약을 체결함과 동시에 본 계약서를 2부 작성하여 &quot;갑&quot;과 &quot;을&quot;이 각각 1부씩 보관한다.</p>
           </div>
 

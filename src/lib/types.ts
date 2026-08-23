@@ -67,6 +67,7 @@ export interface AppConfig {
   ownerName?: string;         // 사업주 성명 (근로계약서 '갑' 대표자 기본값)
   ownerSignature?: string;    // 사업주 서명 이미지 (PNG data URL) — 계약서 '갑' 서명에 사용
   defaultJobDescription?: string; // 근로계약서 담당 업무 기본 문구
+  contractIncentiveClause?: string; // 근로계약서 인센티브 조항 문구 (비우면 인센티브 설정값으로 자동 생성)
   fixedCost: number;
   dailyTarget: number;        // 1일 목표 매출 (monthlyTarget이 없을 때 영업일수 × 이 값이 월 목표)
   monthlyTarget?: number;     // 월 목표 매출 — 설정되면 영업일수와 무관하게 이 값이 월 목표

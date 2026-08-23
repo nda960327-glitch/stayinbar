@@ -154,6 +154,15 @@ export default function SettingsForm() {
             <span className="cap">근로계약서 담당 업무 기본 문구</span>
             <input value={config.defaultJobDescription ?? ""} onChange={(e) => set("defaultJobDescription", e.target.value)} placeholder="예: 바 운영 전반 업무 일체" />
           </label>
+          <label className="field" style={{ gridColumn: "1 / -1" }}>
+            <span className="cap">근로계약서 【인센티브】 조항 — 비워두면 아래 인센티브 설정값(순이익 비율·적용 시작 월)으로 자동 작성됩니다</span>
+            <textarea
+              rows={5}
+              value={config.contractIncentiveClause ?? ""}
+              onChange={(e) => set("contractIncentiveClause", e.target.value)}
+              placeholder={`(자동) ① "갑"은 "을"에게 기본급 외에 인센티브를 지급한다. ② ${config.incentiveProfitStartMonth || "YYYY-MM"}부터 매월 인센티브 차감 전 순이익의 ${Math.round((config.incentiveProfitRate ?? 0) * 100)}%를 인센티브 풀(총액)로 편성한다. ③ 풀 총액을 기여율대로 나눠 지급한다(각자 10%가 아님). ④ 순이익 0 이하인 달은 없음. ⑤ …`}
+            />
+          </label>
         </div>
 
         {/* 사업주 서명 */}
@@ -331,7 +340,7 @@ export default function SettingsForm() {
           </label>
         </div>
         <p className="muted small">
-          적용 시작 월부터는 <strong>인센티브 차감 전 순이익 × 비율</strong>을 인센티브 풀로 잡고 전 직원 기여점수에 비례해 분배합니다
+          적용 시작 월부터는 <strong>인센티브 차감 전 순이익 × 비율</strong>을 인센티브 풀(총액) 하나로 잡고, 그 풀을 각자 기여율(본인 기여점수 ÷ 전체 점수)대로 나눠 지급합니다 — 각자가 순이익의 10%를 받는 게 아닙니다
           (순이익이 0 이하인 달은 인센티브 없음). 그 전 달은 아래 매출 풀 방식으로 계산됩니다.
         </p>
         <h2 style={{ marginTop: 16 }}>매출 풀 방식 <span className="sub">적용 시작 월 이전 달에만 사용</span></h2>

@@ -18,6 +18,7 @@ interface MyData {
   me: EmployeeReport | null;
   projection?: MonthProjection;
   pnl?: Pick<OwnerPnL, "incentiveMode" | "incentiveRate">;
+  incentiveClause?: string;
 }
 
 export default function MyPage() {
@@ -109,7 +110,7 @@ export default function MyPage() {
 
       {/* 내 리포트 */}
       {data.me ? (
-        <EmployeeDetail emp={data.me} month={month} isOwner={false} projection={data.projection} pnl={data.pnl} onUpdated={() => load(month)} />
+        <EmployeeDetail emp={data.me} month={month} isOwner={false} projection={data.projection} pnl={data.pnl} onUpdated={() => load(month)} incentiveClause={data.incentiveClause} />
       ) : (
         <div className="card mt">
           <div className="notice">

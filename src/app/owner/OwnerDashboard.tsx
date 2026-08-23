@@ -7,6 +7,7 @@ import EmployeeDetail from "@/components/EmployeeDetail";
 
 type OwnerData = MonthlyResult & {
   businessName: string;
+  incentiveClause?: string;
   source: string;
   updatedAt: string;
 };
@@ -457,7 +458,7 @@ export default function OwnerDashboard() {
           {data.employees
             .filter((e) => e.id === openEmp)
             .map((e) => (
-              <EmployeeDetail key={e.id} emp={e} month={month} isOwner projection={data.projection} pnl={o} />
+              <EmployeeDetail key={e.id} emp={e} month={month} isOwner projection={data.projection} pnl={o} incentiveClause={data.incentiveClause} />
             ))}
 
           {/* 데이터 업로드 */}

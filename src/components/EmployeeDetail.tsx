@@ -27,6 +27,7 @@ export default function EmployeeDetail({
   projection,
   pnl,
   onUpdated,
+  incentiveClause,
 }: {
   emp: EmployeeReport;
   month: string;
@@ -34,6 +35,7 @@ export default function EmployeeDetail({
   projection?: MonthProjection;   // 월말 예상 (매출·순이익·인센티브 풀)
   pnl?: Pick<OwnerPnL, "incentiveMode" | "incentiveRate">; // 이 달의 인센티브 방식
   onUpdated?: () => void;          // 본인 설정(세금 방식 등)을 바꾼 뒤 다시 불러오기
+  incentiveClause?: string;        // 근로계약서 인센티브 조항
 }) {
   const [taxSaving, setTaxSaving] = useState(false);
   const [taxMsg, setTaxMsg] = useState("");
@@ -298,7 +300,7 @@ export default function EmployeeDetail({
       </div>
 
       {/* 근로계약서 */}
-      <ContractViewer emp={emp} businessName="STAY IN BAR" isOwner={isOwner} />
+      <ContractViewer emp={emp} businessName="STAY IN BAR" isOwner={isOwner} incentiveClause={incentiveClause} />
 
       {/* AI 리포트 */}
       <div className="card mt" style={{ background: "var(--bg-2)" }}>

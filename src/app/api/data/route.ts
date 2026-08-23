@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { getLogs } from "@/lib/store";
 import { computeMonthly } from "@/lib/calc";
+import { incentiveClauseText } from "@/lib/contractText";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,7 @@ export async function GET(req: Request) {
       projection: result.projection,
       pnl: { incentiveMode: result.owner.incentiveMode, incentiveRate: result.owner.incentiveRate },
       notices: config.notices ?? [],
+      incentiveClause: incentiveClauseText(config),
       source,
       updatedAt,
     });
@@ -50,6 +52,7 @@ export async function GET(req: Request) {
     role: "owner",
     businessName: config.businessName,
     notices: config.notices ?? [],
+    incentiveClause: incentiveClauseText(config),
     source,
     updatedAt,
     ...result,

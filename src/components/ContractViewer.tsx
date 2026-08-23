@@ -1,7 +1,30 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { won } from "@/lib/format";
-import type { EmployeeReport } from "@/lib/types";
+import type { EmployeeReport, EmploymentContract } from "@/lib/types";
+import SignaturePad from "@/components/SignaturePad";
+
+type Party = "owner" | "employee";
+
+// 서명란 한 칸: 손글씨 서명이 있으면 이미지, 없으면 빈 줄
+function SignLine({ signature, signed, signedAt }: { signature?: string; signed?: boolean; signedAt?: string }) {
+  if (signature) {
+    return (
+      <div style={{ marginTop: 8 }}>
+        <span style={{ color: "#555" }}>서 &nbsp; &nbsp; 명: </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={signature} alt="서명" style={{ height: 56, verticalAlign: "middle", background: "#fff" }} />
+        {signedAt && <span style={{ fontSize: "0.75rem", color: "#777", marginLeft: 8 }}>({signedAt} 전자서명)</span>}
+      </div>
+    );
+  }
+  return (
+    <p style={{ marginTop: 8, color: signed ? "green" : "#999" }}>
+      서 &nbsp; &nbsp; 명: {signed ? "✅ 서명 완료" : "_____________________(인)"}
+    </p>
+  );
+}
 
 interface Props {
   emp: EmployeeReport;
@@ -21,7 +44,38 @@ function Blank({ v }: { v?: string | number | null }) {
 }
 
 export default function ContractViewer({ emp, businessName, isOwner }: Props) {
-  const c = emp.contract ?? {};
+  // 서명하면 새로고침 없이 바로 반영되도록 계약 내용을 상태로 들고 있습니다
+  const [contract, setContract] = useState<Partial<EmploymentContract>>(emp.contract ?? {});
+  useEffect(() => { setContract(emp.contract ?? {}); }, [emp.id, emp.contract]);
+  const c = contract;
+
+  const [signing, setSigning] = useState<Party | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [signMsg, setSignMsg] = useState("");
+
+  async function submitSign(party: Party, signature?: string, action: "sign" | "clear" = "sign") {
+    setSaving(true);
+    setSignMsg("");
+    try {
+      const res = await fetch("/api/contract/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeId: emp.id, party, signature, action }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSignMsg("❌ " + (json.error ?? "서명 저장 실패"));
+        return;
+      }
+      setContract(json.contract ?? {});
+      setSigning(null);
+      setSignMsg(action === "clear" ? "서명을 지웠습니다. 다시 서명을 받을 수 있습니다." : "✅ 서명이 저장되었습니다.");
+    } catch {
+      setSignMsg("❌ 네트워크 오류");
+    } finally {
+      setSaving(false);
+    }
+  }
   const monthlySalary = emp.employmentType === "salary" ? Math.round(emp.annualSalary / 12) : null;
   const maskedRrn = emp.personal?.rrn
     ? emp.personal.rrn.replace(/^(\d{6})-?(\d)(\d{5,6})$/, "$1-$2******")
@@ -177,19 +231,70 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
               <p>사 업 장: {businessName}</p>
               <p>주 &nbsp; &nbsp; 소: <Blank v={c.businessAddress} /></p>
               <p>대 표 자: <Blank v={c.ownerName} /></p>
-              <p style={{ marginTop: 8, color: c.ownerSigned ? "green" : "#999" }}>
-                서 &nbsp; &nbsp; 명: {c.ownerSigned ? "✅ 서명 완료" : "_____________________(인)"}
-              </p>
+              <SignLine signature={c.ownerSignature} signed={c.ownerSigned} signedAt={c.ownerSignedAt} />
             </div>
             <div style={{ border: "1px solid #ccc", padding: 14, borderRadius: 6 }}>
               <p style={{ fontWeight: "bold", marginBottom: 8 }}>근로자 (을)</p>
               <p>성 &nbsp; &nbsp; 명: {emp.name}</p>
               <p>주민번호: {maskedRrn || "______-_______"}</p>
-              <p style={{ marginTop: 8, color: c.employeeSigned ? "green" : "#999" }}>
-                서 &nbsp; &nbsp; 명: {c.employeeSigned ? "✅ 서명 완료" : "_____________________(인)"}
-              </p>
+              <SignLine signature={c.employeeSignature} signed={c.employeeSigned} signedAt={c.employeeSignedAt} />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 전자서명 — 인쇄 영역 밖 */}
+      {hasContract && (
+        <div style={{ marginTop: 14 }}>
+          {!isOwner && (
+            c.employeeSignature ? (
+              <p className="small muted">✅ 내 서명이 완료된 계약서입니다{c.employeeSignedAt ? ` (${c.employeeSignedAt})` : ""}. 위 인쇄 버튼으로 PDF로 보관하세요.</p>
+            ) : signing === "employee" ? (
+              <SignaturePad
+                label="아래 칸에 손가락이나 마우스로 이름을 서명해 주세요. 내용을 확인했고 계약에 동의한다는 뜻입니다."
+                onSave={(sig) => submitSign("employee", sig)}
+                onCancel={() => setSigning(null)}
+                saving={saving}
+              />
+            ) : (
+              <button className="btn" type="button" onClick={() => setSigning("employee")}>
+                ✍️ 근로자(을) 서명하기
+              </button>
+            )
+          )}
+
+          {isOwner && (
+            <div className="row" style={{ gap: 8 }}>
+              {c.ownerSignature ? (
+                <button className="btn ghost sm" type="button" disabled={saving} onClick={() => submitSign("owner", undefined, "clear")}>
+                  갑 서명 지우기
+                </button>
+              ) : signing === "owner" ? null : (
+                <button className="btn sm" type="button" onClick={() => setSigning("owner")}>
+                  ✍️ 사용자(갑) 서명하기
+                </button>
+              )}
+              {c.employeeSignature && (
+                <button className="btn ghost sm" type="button" disabled={saving} onClick={() => {
+                  if (confirm(`${emp.name} 님의 서명을 지우고 다시 받을까요?`)) submitSign("employee", undefined, "clear");
+                }}>
+                  근로자 서명 지우기 (다시 받기)
+                </button>
+              )}
+              {!c.employeeSignature && (
+                <span className="small muted">근로자 서명은 {emp.name} 님이 본인 계정으로 로그인해 "내 리포트 → 근로계약서"에서 합니다.</span>
+              )}
+            </div>
+          )}
+          {isOwner && signing === "owner" && (
+            <SignaturePad
+              label={`사용자(갑) 서명 — ${c.ownerName || businessName} 대표`}
+              onSave={(sig) => submitSign("owner", sig)}
+              onCancel={() => setSigning(null)}
+              saving={saving}
+            />
+          )}
+          {signMsg && <p className="small" style={{ marginTop: 8 }}>{signMsg}</p>}
         </div>
       )}
     </div>

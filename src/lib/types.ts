@@ -20,6 +20,10 @@ export interface EmploymentContract {
   ownerSigned: boolean;     // 사업주 서명 여부
   employeeSigned: boolean;  // 근로자 서명 여부
   signedAt: string;         // 계약서 작성일 (YYYY-MM-DD)
+  ownerSignature?: string;    // 사업주 손글씨 서명 (PNG data URL)
+  ownerSignedAt?: string;     // 사업주 서명 시각 (KST)
+  employeeSignature?: string; // 근로자 손글씨 서명 (PNG data URL)
+  employeeSignedAt?: string;  // 근로자 서명 시각 (KST)
 }
 
 export interface Employee {

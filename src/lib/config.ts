@@ -103,6 +103,27 @@ async function kvSet(kvUrl: string, kvToken: string, config: AppConfig): Promise
   if (!res.ok) throw new Error(`KV 저장 실패: ${res.status}`);
 }
 
+// ── 기본값 채우기 ─────────────────────────────────────────────────────────
+// 소스코드에 커밋된 data/config.json 을 기본값으로 삼는다.
+// KV·/tmp 등에 예전에 저장된 설정에는 나중에 추가된 항목(공지, 순이익 인센티브 등)이 없을 수 있으므로
+// 빠진 항목은 기본값으로 채워 코드 배포만으로도 새 기능이 바로 동작하게 한다.
+const LEGACY_EXEC_PIN = "5678"; // 예전 초기 PIN — 아직 이 값이면 새 초기 PIN으로 넘긴다
+
+async function readBundledConfig(): Promise<AppConfig> {
+  const raw = await fs.readFile(CONFIG_PATH, "utf-8");
+  return JSON.parse(raw) as AppConfig;
+}
+
+async function withDefaults(stored: AppConfig): Promise<AppConfig> {
+  const bundled = await readBundledConfig();
+  const merged: AppConfig = { ...bundled, ...stored };
+  if (!stored.execPin || stored.execPin === LEGACY_EXEC_PIN) merged.execPin = bundled.execPin;
+  if (!Array.isArray(stored.notices)) merged.notices = bundled.notices ?? [];
+  if (typeof stored.incentiveProfitRate !== "number") merged.incentiveProfitRate = bundled.incentiveProfitRate;
+  if (!stored.incentiveProfitStartMonth) merged.incentiveProfitStartMonth = bundled.incentiveProfitStartMonth;
+  return merged;
+}
+
 // ── 외부 공개 API ─────────────────────────────────────────────────────────
 export async function getConfig(): Promise<AppConfig> {
   const kvUrl = process.env.KV_REST_API_URL;
@@ -111,24 +132,23 @@ export async function getConfig(): Promise<AppConfig> {
   // 1순위: GitHub API (GITHUB_TOKEN 설정 시) — 모든 기기에서 즉시 반영
   if (process.env.GITHUB_TOKEN) {
     const gh = await githubGet();
-    if (gh) return gh;
+    if (gh) return withDefaults(gh);
   }
 
   // 2순위: Vercel KV (KV 스토리지 연결 시)
   if (kvUrl && kvToken) {
     const kv = await kvGet(kvUrl, kvToken);
-    if (kv) return kv;
+    if (kv) return withDefaults(kv);
   }
 
   // 3순위: /tmp (재배포 전까지, 같은 인스턴스에서만)
   try {
     const tmp = await fs.readFile(TMP_CONFIG_PATH, "utf-8");
-    return JSON.parse(tmp) as AppConfig;
+    return withDefaults(JSON.parse(tmp) as AppConfig);
   } catch { /* 없으면 무시 */ }
 
   // 4순위: 소스코드에 커밋된 기본 config.json
-  const raw = await fs.readFile(CONFIG_PATH, "utf-8");
-  return JSON.parse(raw) as AppConfig;
+  return readBundledConfig();
 }
 
 export async function saveConfig(config: AppConfig): Promise<void> {
@@ -164,6 +184,7 @@ export function sanitizeConfig(config: AppConfig): AppConfig {
   return {
     ...config,
     ownerPin: "",
+    execPin: "",
     employees: config.employees.map((e) => ({
       ...e,
       pin: "",

@@ -167,6 +167,21 @@ export default function SettingsForm() {
         </p>
       </div>
 
+      {/* 임원 대시보드 PIN */}
+      <div className="card mt">
+        <h2>임원 대시보드 PIN</h2>
+        <label className="field" style={{ maxWidth: 280 }}>
+          <span className="cap">/exec 입장 PIN</span>
+          <input
+            value={config.execPin ?? ""}
+            onChange={(e) => set("execPin", e.target.value.trim())}
+            placeholder="예: 240901"
+            inputMode="numeric"
+          />
+        </label>
+        <p className="muted small">임원 대시보드(/exec)에 들어갈 때 쓰는 PIN입니다. 바꾼 뒤 맨 아래 <strong>전체 저장</strong>을 누르세요.</p>
+      </div>
+
       {/* 공지사항 */}
       <div className="card mt">
         <div className="row spread">

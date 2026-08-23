@@ -208,14 +208,8 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
           </div>
 
           {/* 제6조 */}
-          <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px dashed #ddd" }}>
-            <div style={{ fontWeight: "bold", marginBottom: 4 }}>제 6 조 【연차유급휴가】</div>
-            <p>근로기준법 제60조에 의거 연간 <Blank v={c.annualLeave ? `${c.annualLeave}일` : undefined} />을 부여한다.</p>
-          </div>
-
-          {/* 제7조 */}
           <div style={{ marginBottom: 24, paddingBottom: 12, borderBottom: "1px dashed #ddd" }}>
-            <div style={{ fontWeight: "bold", marginBottom: 4 }}>제 7 조 【근로계약서 교부】</div>
+            <div style={{ fontWeight: "bold", marginBottom: 4 }}>제 6 조 【근로계약서 교부】</div>
             <p>&quot;갑&quot;은 근로계약을 체결함과 동시에 본 계약서를 2부 작성하여 &quot;갑&quot;과 &quot;을&quot;이 각각 1부씩 보관한다.</p>
           </div>
 

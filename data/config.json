@@ -1,5 +1,7 @@
 {
   "businessName": "STAY IN BAR",
+  "businessAddress": "서울시 강남구 언주로98길 14, B1",
+  "ownerName": "노도아",
   "fixedCost": 3500000,
   "dailyTarget": 1500000,
   "monthlyTarget": 18000000,

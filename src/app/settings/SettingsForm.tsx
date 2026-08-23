@@ -117,6 +117,14 @@ export default function SettingsForm() {
             <input value={config.businessName} onChange={(e) => set("businessName", e.target.value)} />
           </label>
           <label className="field">
+            <span className="cap">사업장 주소 (근로계약서 근무장소 기본값)</span>
+            <input value={config.businessAddress ?? ""} onChange={(e) => set("businessAddress", e.target.value)} placeholder="예: 서울시 강남구 언주로98길 14, B1" />
+          </label>
+          <label className="field">
+            <span className="cap">사업주 성명 (근로계약서 대표자 기본값)</span>
+            <input value={config.ownerName ?? ""} onChange={(e) => set("ownerName", e.target.value)} placeholder="예: 노도아" />
+          </label>
+          <label className="field">
             <span className="cap">월 고정비 (원)</span>
             <input
               type="number"
@@ -407,7 +415,19 @@ export default function SettingsForm() {
             <div style={{ marginTop: 12 }}>
               <button
                 className="btn ghost sm"
-                onClick={() => setOpenContract(openContract === e.id ? null : e.id)}
+                onClick={() => {
+                  const opening = openContract !== e.id;
+                  if (opening) {
+                    // 비어 있는 근무장소·사업장 주소·사업주 성명은 매장 설정값으로 채워 넣는다
+                    const c = e.contract ?? {};
+                    const patch: Partial<typeof c> = {};
+                    if (!c.workLocation && config?.businessAddress) patch.workLocation = config.businessAddress;
+                    if (!c.businessAddress && config?.businessAddress) patch.businessAddress = config.businessAddress;
+                    if (!c.ownerName && config?.ownerName) patch.ownerName = config.ownerName;
+                    if (Object.keys(patch).length) setEmp(idx, { contract: { ...c, ...patch } });
+                  }
+                  setOpenContract(opening ? e.id : null);
+                }}
                 type="button"
               >
                 {openContract === e.id ? "▲ 근로계약서 접기" : "📄 근로계약서 작성"}
@@ -434,7 +454,7 @@ export default function SettingsForm() {
                   </label>
                   <label className="field">
                     <span className="cap">근무 장소</span>
-                    <input value={e.contract?.workLocation ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, workLocation: ev.target.value } })} placeholder="예: STAY IN BAR 서울 신당동" />
+                    <input value={e.contract?.workLocation ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, workLocation: ev.target.value } })} placeholder={config.businessAddress || "예: 서울시 강남구 언주로98길 14, B1"} />
                   </label>
                   <label className="field">
                     <span className="cap">사업장 주소</span>
@@ -463,10 +483,6 @@ export default function SettingsForm() {
                   <label className="field">
                     <span className="cap">주휴일</span>
                     <input value={e.contract?.weeklyRestDay ?? ""} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, weeklyRestDay: ev.target.value } })} placeholder="예: 일요일" />
-                  </label>
-                  <label className="field">
-                    <span className="cap">연차 (일)</span>
-                    <input type="number" value={e.contract?.annualLeave ?? 15} onChange={(ev) => setEmp(idx, { contract: { ...e.contract, annualLeave: Number(ev.target.value) } })} />
                   </label>
                   <label className="field">
                     <span className="cap">임금 지급일 (매월 N일)</span>

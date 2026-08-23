@@ -199,7 +199,7 @@ export default function ContractViewer({ emp, businessName, isOwner }: Props) {
                 </tr>
                 <tr>
                   <th style={{ border: "1px solid #ccc", padding: "4px 8px", background: "#f5f5f5", textAlign: "left" }}>지급방법</th>
-                  <td style={{ border: "1px solid #ccc", padding: "4px 8px" }}><Blank v={c.paymentMethod} /></td>
+                  <td style={{ border: "1px solid #ccc", padding: "4px 8px" }}><Blank v={c.paymentMethod || "계좌이체"} /></td>
                 </tr>
                 <tr>
                   <th style={{ border: "1px solid #ccc", padding: "4px 8px", background: "#f5f5f5", textAlign: "left" }}>세금처리</th>

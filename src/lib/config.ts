@@ -107,7 +107,7 @@ async function kvSet(kvUrl: string, kvToken: string, config: AppConfig): Promise
 // 소스코드에 커밋된 data/config.json 을 기본값으로 삼는다.
 // KV·/tmp 등에 예전에 저장된 설정에는 나중에 추가된 항목(공지, 순이익 인센티브 등)이 없을 수 있으므로
 // 빠진 항목은 기본값으로 채워 코드 배포만으로도 새 기능이 바로 동작하게 한다.
-const LEGACY_EXEC_PIN = "5678"; // 예전 초기 PIN — 아직 이 값이면 새 초기 PIN으로 넘긴다
+const LEGACY_EXEC_PIN = "240901"; // 예전 초기 PIN — 아직 이 값이면 새 초기 PIN으로 넘긴다
 
 async function readBundledConfig(): Promise<AppConfig> {
   const raw = await fs.readFile(CONFIG_PATH, "utf-8");

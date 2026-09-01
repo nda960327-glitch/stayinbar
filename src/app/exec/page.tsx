@@ -111,7 +111,6 @@ export default function ExecPage() {
           <button className="btn" style={{ width: "100%" }} onClick={login} disabled={authLoading || !pin}>
             {authLoading ? "확인 중…" : "입장"}
           </button>
-          <p className="muted small" style={{ marginTop: 16 }}>초기 PIN: 240901 · 설정에서 변경 가능</p>
         </div>
       </div>
     );

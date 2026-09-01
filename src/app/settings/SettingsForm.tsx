@@ -269,7 +269,7 @@ export default function SettingsForm() {
           <input
             value={config.execPin ?? ""}
             onChange={(e) => set("execPin", e.target.value.trim())}
-            placeholder="예: 240901"
+            placeholder="숫자 PIN"
             inputMode="numeric"
           />
         </label>

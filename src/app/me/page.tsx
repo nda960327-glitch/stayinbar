@@ -11,6 +11,7 @@ export default async function Me() {
   const session = getSession();
   if (!session) redirect("/");
   if (session.role === "owner") redirect("/owner");
+  if (session.role === "exec") redirect("/exec");
   const config = await getConfig();
 
   return (

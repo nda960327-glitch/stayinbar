@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function PUT(req: Request) {
   const session = getSession();
-  if (!session || session.role === "owner") {
+  if (!session || session.role === "owner" || session.role === "exec") {
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 

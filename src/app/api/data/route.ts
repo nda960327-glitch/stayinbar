@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   const result = computeMonthly(rows, config, month);
 
   // 직원은 본인 데이터만
-  if (session.role !== "owner") {
+  if (session.role !== "owner" && session.role !== "exec") {
     const mine = result.employees.find((e) => e.id === session.id) ?? null;
     return NextResponse.json({
       role: session.role,

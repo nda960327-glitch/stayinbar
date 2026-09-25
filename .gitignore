@@ -14,3 +14,6 @@ data/logs.json
 data/customers.json
 data/guestbook.json
 data/.probe
+
+# 프로젝트 보드 (로컬 개발용 저장본 — 커밋 안 함)
+data/projects.json

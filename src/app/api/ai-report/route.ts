@@ -37,18 +37,36 @@ export async function POST(req: Request) {
     });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  // DeepSeek을 기본으로 쓰고, 키가 없으면 예전 OpenAI 설정으로 넘어간다.
+  // 두 곳 모두 요청 형식이 같아서 주소·모델만 다르다.
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  const ai = deepseekKey
+    ? {
+        name: "DeepSeek",
+        url: "https://api.deepseek.com/chat/completions",
+        apiKey: deepseekKey,
+        model: process.env.DEEPSEEK_MODEL || "deepseek-chat",
+      }
+    : openaiKey
+    ? {
+        name: "OpenAI",
+        url: "https://api.openai.com/v1/chat/completions",
+        apiKey: openaiKey,
+        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      }
+    : null;
+
+  if (!ai) {
     return NextResponse.json(
       {
         error:
-          "AI 키가 아직 등록되지 않았습니다. Vercel → Settings → Environment Variables 에 OPENAI_API_KEY를 넣고 재배포해 주세요. (로컬은 .env.local)",
+          "AI 키가 아직 등록되지 않았습니다. Vercel → Settings → Environment Variables 에 DEEPSEEK_API_KEY를 넣고 재배포해 주세요. (로컬은 .env.local)",
       },
       { status: 500 }
     );
   }
 
-  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const logText = emp.texts.join("\n");
 
   const systemPrompt = `너는 바(bar) 매장의 매니저를 돕는 인사 분석 어시스턴트다. 직원이 작성한 업무일지를 읽고 공정하고 구체적으로 분석한다.
@@ -80,14 +98,14 @@ export async function POST(req: Request) {
 ${logText}`;
 
   try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const res = await fetch(ai.url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${ai.apiKey}`,
       },
       body: JSON.stringify({
-        model,
+        model: ai.model,
         temperature: 0.4,
         response_format: { type: "json_object" },
         messages: [
@@ -99,12 +117,14 @@ ${logText}`;
 
     if (!res.ok) {
       const err = await res.text();
-      return NextResponse.json({ error: `OpenAI 오류: ${res.status} ${err}` }, { status: 502 });
+      return NextResponse.json({ error: `${ai.name} 오류: ${res.status} ${err}` }, { status: 502 });
     }
 
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content ?? "{}";
-    const parsed = JSON.parse(content);
+    // 모델이 ```json 으로 감싸서 주는 경우가 있어 벗겨낸다
+    const cleaned = content.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    const parsed = JSON.parse(cleaned);
     return NextResponse.json(parsed);
   } catch (e) {
     return NextResponse.json({ error: `AI 분석 실패: ${(e as Error).message}` }, { status: 500 });

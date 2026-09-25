@@ -17,3 +17,6 @@ data/.probe
 
 # 프로젝트 보드 (로컬 개발용 저장본 — 커밋 안 함)
 data/projects.json
+
+# 오늘 한 일 메모 (로컬 개발용 저장본 — 커밋 안 함)
+data/worklog.json

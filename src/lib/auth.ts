@@ -17,12 +17,22 @@ const COOKIE = "sib_session";
 export const SESSION_MAX_AGE = 60 * 60 * 12;
 
 // 쿠키 위조 방지용 서명 키. Vercel 환경변수 SESSION_SECRET 설정을 권장.
-// 없으면 서버에만 있는 KV 토큰을 쓰고, 그것도 없으면(로컬 개발) 프로세스마다 임의 생성.
-const SECRET =
-  process.env.SESSION_SECRET ||
-  process.env.KV_REST_API_TOKEN ||
-  process.env.UPSTASH_REDIS_REST_TOKEN ||
-  randomBytes(32).toString("hex");
+// 없으면 서버에만 있는 KV 토큰을 쓴다.
+// 로컬 개발은 고정값을 쓴다 — 임의 생성하면 페이지와 API가 서로 다른 키를 갖게 되어 로그인이 바로 풀린다.
+// 운영에서 아무것도 없으면 임의 키라 로그인이 계속 풀리므로, 눈에 띄게 경고한다.
+function sessionSecret(): string {
+  const fromEnv =
+    process.env.SESSION_SECRET ||
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.GITHUB_TOKEN;
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV !== "production") return "stayinbar-local-dev-secret";
+  console.error("[auth] SESSION_SECRET이 없습니다. 로그인이 자꾸 풀립니다 — Vercel 환경변수에 넣어 주세요.");
+  return randomBytes(32).toString("hex");
+}
+
+const SECRET = sessionSecret();
 
 const sign = (payload: string) => createHmac("sha256", SECRET).update(payload).digest("base64url");
 

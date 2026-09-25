@@ -64,6 +64,7 @@ export async function verifyLogin(id: string, pin: string): Promise<Session | nu
   const config = await getConfig();
   const emp = config.employees.find((e) => e.id === id);
   if (!emp) return null;
+  if (emp.retiredAt && emp.retiredAt <= new Date().toISOString().slice(0, 10)) return null; // 퇴사자
   if (emp.pin && emp.pin === pin) {
     return { id: emp.id, name: emp.name, role: emp.role };
   }

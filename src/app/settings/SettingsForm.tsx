@@ -56,12 +56,24 @@ export default function SettingsForm() {
     reader.readAsDataURL(file);
   }
 
+  const [loadError, setLoadError] = useState("");
+
   useEffect(() => {
     fetch("/api/config")
-      .then((r) => r.json())
-      .then(setConfig);
+      .then((r) => (r.ok ? r.json() : null))
+      // 로그인이 풀리면 설정 대신 에러가 오는데, 그대로 넣으면 화면이 통째로 깨진다
+      .then((c) => (c && Array.isArray(c.employees) ? setConfig(c) : setLoadError("설정을 불러오지 못했습니다. 다시 로그인해 주세요.")))
+      .catch(() => setLoadError("설정을 불러오지 못했습니다. 네트워크를 확인해 주세요."));
   }, []);
 
+  if (loadError) {
+    return (
+      <div className="card">
+        <div className="notice warn">{loadError}</div>
+        <a className="btn mt" href="/">로그인 화면으로</a>
+      </div>
+    );
+  }
   if (!config) return <div className="card">불러오는 중…</div>;
 
   function set<K extends keyof AppConfig>(key: K, value: AppConfig[K]) {
@@ -378,10 +390,16 @@ export default function SettingsForm() {
           </button>
         </div>
 
-        {config.employees.map((e, idx) => (
-          <div key={e.id} className="card mt" style={{ background: "var(--bg-2)" }}>
+        {config.employees
+          .map((e, idx) => ({ e, idx }))
+          .sort((a, b) => Number(!!a.e.retiredAt) - Number(!!b.e.retiredAt))
+          .map(({ e, idx }) => (
+          <div key={e.id} className="card mt" style={{ background: "var(--bg-2)", opacity: e.retiredAt ? 0.6 : 1 }}>
             <div className="row spread">
-              <strong>{e.name || "(이름 없음)"}</strong>
+              <strong>
+                {e.name || "(이름 없음)"}
+                {e.retiredAt && <span className="muted small" style={{ marginLeft: 8 }}>· 퇴사 {e.retiredAt}</span>}
+              </strong>
               <button className="btn ghost sm" onClick={() => removeEmp(idx)}>
                 삭제
               </button>
@@ -394,6 +412,14 @@ export default function SettingsForm() {
               <label className="field">
                 <span className="cap">직책</span>
                 <input value={e.position ?? ""} onChange={(ev) => setEmp(idx, { position: ev.target.value })} />
+              </label>
+              <label className="field">
+                <span className="cap">퇴사일 (재직 중이면 비움)</span>
+                <input
+                  type="date"
+                  value={e.retiredAt ?? ""}
+                  onChange={(ev) => setEmp(idx, { retiredAt: ev.target.value })}
+                />
               </label>
               <label className="field">
                 <span className="cap">역할</span>

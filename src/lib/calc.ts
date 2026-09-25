@@ -125,6 +125,13 @@ export function listMonths(rows: LogRow[]): string[] {
   return Array.from(set).sort().reverse();
 }
 
+// 퇴사자는 퇴사한 달까지만 급여·인센티브 계산에 넣는다 (그 달은 일했으므로).
+// 그 다음 달부터 빠지고, 과거 달 리포트는 예전 그대로 남는다.
+export function isActiveIn(emp: Employee, month: string): boolean {
+  if (!emp.retiredAt) return true;
+  return emp.retiredAt.slice(0, 7) >= month;
+}
+
 export function computeMonthly(
   rows: LogRow[],
   config: AppConfig,
@@ -180,6 +187,7 @@ export function computeMonthly(
       continue;
     }
     if (emp.role === "owner") continue; // 사장은 급여/인센티브 대상 제외
+    if (!isActiveIn(emp, targetMonth)) continue; // 퇴사한 달 이후는 제외
     let agg = byEmp.get(emp.id);
     if (!agg) {
       agg = { dates: new Set(), score: 0, texts: [], totalHours: 0, logs: [] };
@@ -218,7 +226,7 @@ export function computeMonthly(
   const pool3Total = Math.round(totalSales * config.incentivePool3Rate);
   const pool2Total = Math.round(totalSales * config.incentivePool2Rate);
   const pool3Recipients = config.employees.filter(
-    (e) => e.getsPool3 && e.role !== "owner"
+    (e) => e.getsPool3 && e.role !== "owner" && isActiveIn(e, targetMonth)
   );
 
   // 급여 (인센티브 계산보다 먼저 — 순이익 인센티브는 급여를 뺀 이익 기준)
@@ -227,7 +235,9 @@ export function computeMonthly(
       ? Math.round(hoursWorked * emp.hourlyWage)
       : Math.round(emp.annualSalary / 12);
 
-  const payrollEmployees = config.employees.filter((e) => e.role !== "owner");
+  const payrollEmployees = config.employees.filter(
+    (e) => e.role !== "owner" && isActiveIn(e, targetMonth)
+  );
   const totalPayrollPre = payrollEmployees.reduce((sum, emp) => {
     const agg = byEmp.get(emp.id);
     return sum + baseSalaryOf(emp, agg?.totalHours ?? 0);
@@ -308,6 +318,7 @@ export function computeMonthly(
   const reports: EmployeeReport[] = [];
   for (const emp of config.employees) {
     if (emp.role === "owner") continue;
+    if (!isActiveIn(emp, targetMonth)) continue; // 퇴사자는 퇴사한 달까지만 리포트에 나온다
     const agg = byEmp.get(emp.id) ?? { dates: new Set<string>(), score: 0, texts: [], totalHours: 0, logs: [] };
     const dailyLogs = [...agg.logs].sort((a, b) => a.date.localeCompare(b.date));
     const attendanceDays = agg.dates.size;

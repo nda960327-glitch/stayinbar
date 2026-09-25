@@ -42,6 +42,7 @@ export interface Employee {
   rrn: string;
   bankAccount: string;
   pin: string;
+  retiredAt?: string;        // 퇴사일 (YYYY-MM-DD) — 비어 있으면 재직 중
   contract?: Partial<EmploymentContract>;
 }
 

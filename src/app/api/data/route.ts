@@ -25,6 +25,12 @@ export async function GET(req: Request) {
 
   const result = computeMonthly(rows, config, month);
 
+  // 퇴사자는 쿠키가 남아 있어도 막는다 (로그인은 이미 막혀 있다)
+  const self = config.employees.find((e) => e.id === session.id);
+  if (self?.retiredAt && self.retiredAt <= new Date().toISOString().slice(0, 10)) {
+    return NextResponse.json({ error: "퇴사 처리된 계정입니다." }, { status: 403 });
+  }
+
   // 직원은 본인 데이터만
   if (session.role !== "owner" && session.role !== "exec") {
     const mine = result.employees.find((e) => e.id === session.id) ?? null;

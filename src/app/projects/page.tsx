@@ -4,6 +4,7 @@ import { getConfig } from "@/lib/config";
 import TopBar from "@/components/TopBar";
 import ProjectsBoard from "./ProjectsBoard";
 import DailyLog from "./DailyLog";
+import Calendar from "./Calendar";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function ProjectsPage() {
       <TopBar name={session.name} role={session.role} business={config.businessName} />
       <div className="container">
         <DailyLog />
+        <Calendar />
         <ProjectsBoard />
       </div>
     </>

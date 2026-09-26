@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
+import { sendAuto } from "@/lib/notes";
 import {
   loadDoc,
   saveDoc,
@@ -131,17 +132,30 @@ export async function POST(req: Request) {
       if (!need(target)) return NextResponse.json({ error: "없는 프로젝트입니다." }, { status: 404 });
       const text = clean(body?.text, 200);
       if (!text) return NextResponse.json({ error: "할일 내용을 적어주세요." }, { status: 400 });
+      const assignee = clean(body?.assignee, 40);
+      const due = clean(body?.due, 10);
       target.tasks.push({
         id: newId(),
         text,
-        assignee: clean(body?.assignee, 40),
-        due: clean(body?.due, 10),
+        assignee,
+        due,
         done: false,
         by: me,
         at: Date.now(),
       });
       target.updatedAt = Date.now();
       logActivity(doc, me, target.id, `"${target.title}"에 할일을 추가했습니다: ${text}`);
+      // 담당자로 지정된 사람에게 쪽지로 알린다
+      if (assignee) {
+        await sendAuto({
+          to: [assignee],
+          from: me,
+          subject: "새 할일이 생겼습니다",
+          body: `[${target.title}] ${text}${due ? `
+마감: ${due}` : ""}`,
+          link: "/projects",
+        });
+      }
       break;
     }
 

@@ -620,3 +620,64 @@ select:focus {
   .cal-day { min-height: 58px; padding: 3px; }
   .cal-chip { font-size: 0.6rem; }
 }
+
+/* ── 헤더: 폰에서는 두 줄로 (가게 이름 / 메뉴 줄) ── */
+@media (max-width: 720px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .topbar .brand {
+    font-size: 14px;
+    gap: 8px;
+  }
+  .topbar .who {
+    gap: 8px;
+    /* 메뉴가 많아도 글자가 세로로 쪼개지지 않게: 한 줄 유지 + 좌우 스크롤 */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .topbar .who::-webkit-scrollbar { display: none; }
+  .topbar .who > * {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .topbar .who a {
+    padding: 4px 2px;
+  }
+  /* 이름표는 윗줄 오른쪽으로 빼서 메뉴 줄을 넓게 쓴다 */
+  .topbar .who .pill {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    max-width: 45vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar .brand {
+    padding-right: 46vw;
+  }
+  /* 좁은 폰(360px)에서도 메뉴가 한 줄에 다 들어오게 */
+  .topbar .who { font-size: 12px; }
+  .topbar .who .btn { font-size: 11px; padding: 3px 7px; }
+}
+
+/* 안 읽은 쪽지 배지 */
+.topbar .who a .badge {
+  display: inline-block;
+  min-width: 16px;
+  padding: 0 4px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  vertical-align: top;
+}

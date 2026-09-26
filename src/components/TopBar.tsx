@@ -14,6 +14,27 @@ export default function TopBar({
 }) {
   const router = useRouter();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [unread, setUnread] = useState(0);
+
+  // 안 읽은 쪽지 수 (임원 계정은 쪽지함이 없다)
+  useEffect(() => {
+    if (role === "exec") return;
+    let alive = true;
+    const tick = async () => {
+      try {
+        const res = await fetch("/api/notes");
+        if (!res.ok) return;
+        const d = await res.json();
+        if (alive) setUnread(d.unread ?? 0);
+      } catch { /* 네트워크 오류는 조용히 넘어간다 */ }
+    };
+    tick();
+    const t = setInterval(tick, 60000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [role]);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -54,6 +75,14 @@ export default function TopBar({
           {role === "owner" ? " · 사장" : role === "exec" ? " · 임원" : ""}
         </span>
 
+        {role !== "exec" && (
+          <a href="/notes">
+            쪽지
+            {unread > 0 && (
+              <span className="badge">{unread > 99 ? "99+" : unread}</span>
+            )}
+          </a>
+        )}
         <a href="/projects">프로젝트</a>
         <a href="/customers">고객관리</a>
         {role === "owner" && (

@@ -23,3 +23,6 @@ data/worklog.json
 
 # 달력 일정 (로컬 개발용 저장본 — 커밋 안 함)
 data/calendar.json
+
+# 쪽지함 (로컬 개발용 저장본 — 커밋 안 함)
+data/notes.json
